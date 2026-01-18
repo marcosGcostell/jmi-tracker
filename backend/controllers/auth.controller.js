@@ -5,8 +5,8 @@ import jwt from 'jsonwebtoken';
 
 import User from '../models/user-model.js';
 import sendEmail from '../models/utils/email.js';
-import catchAsync from '../models/utils/catch-async.js';
-import AppError from '../models/utils/app-error.js';
+import catchAsync from '../utils/catch-async.js';
+import AppError from '../utils/app-error.js';
 import { dateNowToISO } from '../models/utils/helpers.js';
 import { APP_LOGO } from '../client/src/utils/config.js';
 

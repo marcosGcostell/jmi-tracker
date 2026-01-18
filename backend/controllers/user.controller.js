@@ -1,6 +1,6 @@
 import User from '../models/user-model.js';
-import catchAsync from '../models/utils/catch-async.js';
-import AppError from '../models/utils/app-error.js';
+import catchAsync from '../utils/catch-async.js';
+import AppError from '../utils/app-error.js';
 import { RESERVED_USER_NAMES } from '../models/utils/config.js';
 
 const _isValidUserName = username => {
