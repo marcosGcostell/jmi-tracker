@@ -6,6 +6,8 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
+import userRouter from './routers/user.route.js';
+
 dotenv.config({ path: './config.env' });
 
 const app = express();
@@ -44,7 +46,7 @@ app.use((req, res, next) => {
 });
 
 // ROUTES
-// app.use('/api/v1/users', userRouter);
+app.use('/api/v1/users', userRouter);
 
 // ERROR MIDDLEWARE
 // app.use(globalErrorHandler);
