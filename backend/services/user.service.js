@@ -10,15 +10,7 @@ export const createUser = async data => {
     throw new AppError(409, 'Ya hay un usuario registrado con este email');
   }
 
-  const passwordError = authService.validatePasswordPolicy(password);
-  if (passwordError.length) {
-    throw new AppError(
-      422,
-      `La contraseña no cumple los requisitos mínimos de seguridad: ${passwordError}`,
-    );
-  }
-
-  const passwordHash = await authService.hashPassword(password);
+  const passwordHash = await authService.validateAndHashPassword(password);
 
   const user = await User.createUser({
     email: email.toLowerCase().trim(),

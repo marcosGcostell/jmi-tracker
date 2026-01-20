@@ -36,19 +36,6 @@ export const getUserByEmail = async email => {
   return rows[0];
 };
 
-export const findUserToLogIn = async email => {
-  const { rows } = await pool.query(
-    `
-    SELECT id, email, full_name, password, role, active
-    FROM users
-    WHERE email = $1
-    `,
-    [email],
-  );
-
-  return rows[0];
-};
-
 export const createUser = async data => {
   const { email, fullName, passwordHash, role } = data;
 
@@ -75,6 +62,20 @@ export const updateUser = async (id, data) => {
     RETURNING id, email, full_name, role
     `,
     [email, full_name, role, active, id],
+  );
+
+  return rows[0];
+};
+
+export const updateUserPassword = async (id, passwordHash) => {
+  const { rows } = await pool.query(
+    `
+    UPDATE users
+    SET password = $1, password_changed_at = NOW() - INTERVAL '1 second'
+    WHERE id = $2
+    RETURNING id, email, full_name, role
+    `,
+    [passwordHash, id],
   );
 
   return rows[0];

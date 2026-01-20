@@ -4,6 +4,7 @@ import crypto from 'crypto';
 
 import User from '../models/user-model.js';
 import * as authService from './auth.service.js';
+import sendAuthResponse from '../utils/sendAuthResponse.js';
 import sendEmail from '../models/utils/email.js';
 import catchAsync from '../utils/catch-async.js';
 import AppError from '../utils/app-error.js';
@@ -13,45 +14,17 @@ export const login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
   const { user, token } = await authService.login(email, password);
 
-  res.cookie('jwt', token, {
-    expires: new Date(
-      Date.now() + process.env.COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
-    ),
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'Lax',
-    httpOnly: true,
-  });
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      user,
-    },
-  });
+  sendAuthResponse(res, { user, token, status: 200 });
 });
 
 export const updatePassword = catchAsync(async (req, res, next) => {
-  const { oldPassword, password, passwordConfirm } = req.body;
-  if (!oldPassword || !password || !passwordConfirm) {
-    return next(
-      new AppError(
-        400,
-        'Current password, new password and new password confirmed are required to change the password.',
-      ),
-    );
-  }
+  const { oldPassword, password } = req.body;
+  const { user, token } = await authService.updatePassword(req.user, {
+    oldPassword,
+    password,
+  });
 
-  const user = await User.findById(req.user.id).select('+password');
-
-  if (!(await user.checkPassword(oldPassword, user.password))) {
-    return next(new AppError(401, 'Current password is incorrect.'));
-  }
-
-  user.password = password;
-  user.passwordConfirm = passwordConfirm;
-  await user.save();
-
-  _loginUser(res, user, 200);
+  sendAuthResponse(res, { user, token, status: 200 });
 });
 
 export const forgotPassword = catchAsync(async (req, res, next) => {
