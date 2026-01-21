@@ -45,3 +45,37 @@ export const validateNewPassword = catchAsync(async (req, res, next) => {
 
   next();
 });
+
+export const validatePasswordReset = catchAsync(async (req, res, next) => {
+  const { code } = req.params;
+  const { password, passwordConfirm } = req.body;
+
+  if (!code) {
+    return next(
+      new AppError(
+        400,
+        'Se necesita enviar el código de confirmación para restablecer la contraseña.',
+      ),
+    );
+  }
+
+  if (!password || !passwordConfirm) {
+    return next(
+      new AppError(
+        400,
+        'Se necesita la nueva contraseña y su campo de confirmación para restablecer la contraseña.',
+      ),
+    );
+  }
+
+  if (password !== passwordConfirm) {
+    return next(
+      new AppError(
+        400,
+        'El campo de confirmación de contraseña ha de ser idéntico a la nueva contraseña.',
+      ),
+    );
+  }
+
+  next();
+});

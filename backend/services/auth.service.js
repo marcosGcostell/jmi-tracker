@@ -166,3 +166,55 @@ export const sendResetPasswordEmail = (email, resetCode) => {
 
   sendEmail({ email: email, subject, text, html });
 };
+
+export const resetPassword = async (code, password) => {
+  const resetCodeHash = crypto.createHash('sha256').update(token).digest('hex');
+  const oldUser = await Auth.findUserByResetCode(resetCodeHash);
+
+  if (!oldUser)
+    throw new AppError(400, 'El código no es correcto o ha expirado.');
+  if (!oldUser?.active)
+    throw new AppError(400, 'Este usuario ya no tiene una cuenta registrada.');
+
+  const passwordHash = await validateAndHashPassword(password);
+
+  Auth.cleanResetCode(oldUser.id);
+  const user = await User.updateUserPassword(oldUser.id, passwordHash);
+
+  const token = _signToken(user.id);
+
+  return { user, token };
+};
+
+export const protectRoute = async token => {
+  if (!token) {
+    return next(
+      new AppError(
+        401,
+        'No has iniciado sesión! Por favor, inicia sesión para obtener acceso.',
+      ),
+    );
+  }
+
+  const decoded = await _verifyToken(token);
+  const currentUser = await Auth.findUserToAuth(decoded.id);
+  if (!currentUser || !currentUser?.active)
+    throw new AppError(401, 'El usuario asociado a la cookie ya no existe.');
+
+  if (_hasChangedPassword(currentUser.password_changed_at, decoded.iat)) {
+    return next(
+      new AppError(401, 'User recently changed password!. Please log in again'),
+    );
+  }
+
+  currentUser.password = undefined;
+  currentUser.password_changed_at = undefined;
+  currentUser.active = undefined;
+
+  return currentUser;
+};
+
+export const restrictToRoles = (userRole, authRoles) => {
+  if (!authRoles.includes(userRole))
+    throw new AppError(401, 'No estás autorizado a acceder a este recurso.');
+};
