@@ -2,47 +2,42 @@ import express from 'express';
 
 import * as userController from '../controllers/user.controller.js';
 import * as authController from '../controllers/auth.controller.js';
+import * as appValidators from '../middleware/app-validators.js';
 
 const router = express.Router();
 
-router.post('/signup', userController.validateUserName, authController.signup);
+// Public routes
 router.post('/login', authController.login);
-router.post(
-  '/check',
-  userController.validateUserName,
-  userController.userExists,
-);
 router.post('/forgot-password', authController.forgotPassword);
-router.post('/reset-password/:token', authController.resetPassword);
+router.post(
+  '/reset-password/:code',
+  appValidators.validatePasswordReset,
+  authController.resetPassword,
+);
 
-router
-  .route('/')
-  .get(
-    authController.protect,
-    authController.restrictTo('admin'),
-    userController.getAllUsers,
-  )
-  .post(
-    authController.protect,
-    authController.restrictTo('admin'),
-    userController.createUser,
-  );
+// Routes for logged in users
+// router.use(authController.protect);
 
 router
   .route('/me')
-  .get(authController.protect, userController.getUser)
-  .patch(
-    authController.protect,
-    userController.validateUserName,
-    userController.validateUserData,
-    userController.updateUser,
-  )
-  .delete(authController.protect, userController.deleteUser);
+  .get(userController.getUser)
+  .patch(userController.updateUser);
 
 router.patch(
   '/me/password',
-  authController.protect,
+  appValidators.validateNewPassword,
   authController.updatePassword,
 );
+
+// Routes for admins only
+// router.use(authController.restrictTo('admin'));
+
+router
+  .route('/')
+  .get(userController.getAllUsers)
+  .post(appValidators.validateUserData, userController.createUser);
+
+router.route('/:email').delete(userController.deleteUser);
+router.route('/:id').patch(userController.updateUserForAdmins);
 
 export default router;

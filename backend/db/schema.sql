@@ -6,7 +6,8 @@ CREATE TABLE users (
 
   email TEXT UNIQUE NOT NULL,
   full_name TEXT NOT NULL,
-  password_hash TEXT NOT NULL,
+  password TEXT NOT NULL,
+  password_changed_at TIMESTAMPTZ DEFAULT now(),
 
   role TEXT NOT NULL CHECK (role IN ('user', 'admin')),
   active BOOLEAN DEFAULT TRUE,

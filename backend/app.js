@@ -1,12 +1,13 @@
+import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
 import userRouter from './routers/user.route.js';
+import globalErrorHandler from './controllers/error.controller.js';
 
 dotenv.config({ path: './config.env' });
 
@@ -49,6 +50,6 @@ app.use((req, res, next) => {
 app.use('/api/v1/users', userRouter);
 
 // ERROR MIDDLEWARE
-// app.use(globalErrorHandler);
+app.use(globalErrorHandler);
 
 export default app;
