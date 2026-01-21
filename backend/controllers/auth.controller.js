@@ -3,27 +3,20 @@ import sendAuthResponse from '../utils/sendAuthResponse.js';
 import catchAsync from '../utils/catch-async.js';
 
 export const login = catchAsync(async (req, res, next) => {
-  const { email, password } = req.body;
-  const { user, token } = await authService.login(email, password);
+  const { user, token } = await authService.login(req.body);
 
   sendAuthResponse(res, { user, token, status: 200 });
 });
 
 export const updatePassword = catchAsync(async (req, res, next) => {
-  const { oldPassword, password } = req.body;
-  const { user, token } = await authService.updatePassword(req.user, {
-    oldPassword,
-    password,
-  });
+  const { user, token } = await authService.updatePassword(req.user, req.body);
 
   sendAuthResponse(res, { user, token, status: 200 });
 });
 
 export const forgotPassword = catchAsync(async (req, res, next) => {
-  const { email } = req.body;
-
-  const resetCode = await authService.saveUserResetCode(email);
-  authService.sendResetPasswordEmail(email, resetCode);
+  const resetCode = await authService.saveUserResetCode(req.body.email);
+  authService.sendResetPasswordEmail(req.body.email, resetCode);
 
   res.status(200).json({
     status: 'success',

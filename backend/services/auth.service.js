@@ -93,7 +93,8 @@ export const validateAndHashPassword = async password => {
   return _hashPassword(password);
 };
 
-export const login = async (email, password) => {
+export const login = async data => {
+  const { email, password } = data;
   // Validate request data
   if (!email || !password) {
     throw new AppError(400, 'Por favor, introduzca su email y su contraseña');
@@ -113,7 +114,9 @@ export const login = async (email, password) => {
   return { user, token };
 };
 
-export const updatePassword = async (loggedUser, { oldPassword, password }) => {
+export const updatePassword = async (loggedUser, data) => {
+  const { oldPassword, password } = data;
+
   const oldUser = await Auth.findUserToAuth(loggedUser.id);
   const isPasswordValid = await _comparePassword(oldPassword, oldUser.password);
 
@@ -188,11 +191,9 @@ export const resetPassword = async (code, password) => {
 
 export const protectRoute = async token => {
   if (!token) {
-    return next(
-      new AppError(
-        401,
-        'No has iniciado sesión! Por favor, inicia sesión para obtener acceso.',
-      ),
+    throw new AppError(
+      401,
+      'No has iniciado sesión! Por favor, inicia sesión para obtener acceso.',
     );
   }
 

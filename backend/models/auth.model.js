@@ -1,7 +1,9 @@
-import pool from '../db/pool.js';
+import { getPool } from '../db/pool.js';
+
+const pool = () => getPool();
 
 export const findUserToLogIn = async email => {
-  const { rows } = await pool.query(
+  const { rows } = await pool().query(
     `
     SELECT id, email, full_name, password, role, active
     FROM users
@@ -14,7 +16,7 @@ export const findUserToLogIn = async email => {
 };
 
 export const findUserToAuth = async id => {
-  const { rows } = await pool.query(
+  const { rows } = await pool().query(
     `
     SELECT id, email, full_name, password, password_changed_at, role, active
     FROM users
@@ -27,7 +29,7 @@ export const findUserToAuth = async id => {
 };
 
 export const findUserByResetCode = async resetCodeHash => {
-  const { rows } = await pool.query(
+  const { rows } = await pool().query(
     `
     SELECT id, email, full_name, role, active, reset_code_hash
     FROM users
@@ -43,7 +45,7 @@ export const findUserByResetCode = async resetCodeHash => {
 export const saveResetCode = async (id, data) => {
   const { resetCodeHash, expirationTime } = data;
 
-  const { rows } = await pool.query(
+  const { rows } = await pool().query(
     `
     UPDATE users
     SET reset_code_hash = $1, reset_code_expires = NOW() + ($2 * INTERVAL '1 minute')
@@ -57,7 +59,7 @@ export const saveResetCode = async (id, data) => {
 };
 
 export const cleanResetCode = async id => {
-  const { rows } = await pool.query(
+  const { rows } = await pool().query(
     `
     UPDATE users
     SET reset_code_hash = NULL, reset_code_expires = NULL

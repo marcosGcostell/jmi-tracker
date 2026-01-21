@@ -16,7 +16,7 @@ router.post(
 );
 
 // Routes for logged in users
-router.use(authController.protect);
+// router.use(authController.protect);
 
 router
   .route('/me')
@@ -30,7 +30,7 @@ router.patch(
 );
 
 // Routes for admins only
-router.use(authController.restrictTo('admin'));
+// router.use(authController.restrictTo('admin'));
 
 router
   .route('/')

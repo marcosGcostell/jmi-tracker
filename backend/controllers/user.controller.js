@@ -52,12 +52,7 @@ export const updateUser = catchAsync(async (req, res, next) => {
 });
 
 export const updateUserForAdmins = catchAsync(async (req, res, next) => {
-  const { email, fullName, role } = req.body;
-  const user = await userService.updateUser(req.params.id, {
-    email,
-    fullName,
-    role,
-  });
+  const user = await userService.updateUser(req.params.id, req.body);
 
   res.status(200).json({
     status: 'success',

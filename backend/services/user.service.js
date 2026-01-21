@@ -21,15 +21,17 @@ export const createUser = async data => {
 
   const user = await User.createUser({
     email: email.toLowerCase().trim(),
-    fullName: fullName.toLowerCase().trim(),
+    fullName: fullName.trim(),
     passwordHash,
-    role,
+    role: role || 'user',
   });
 
   return user;
 };
 
 export const updateUser = async (id, data) => {
+  const { email, fullName, role, active } = req.body;
+
   const user = await User.getUser(id);
   if (!user)
     throw new AppError(
@@ -37,13 +39,14 @@ export const updateUser = async (id, data) => {
       'No has iniciado sesión! Por favor, inicia sesión para obtener acceso.',
     );
 
-  const data = {
-    email: data.email || user.email,
-    fullName: data.fullName || user.full_name,
-    role: data.role || user.role,
+  const newData = {
+    email: email?.toLowerCase().trim() || user.email,
+    fullName: fullName?.trim() || user.full_name,
+    role: role || user.role || 'user',
+    active: active || true,
   };
 
-  return User.updateUser(user.id, data);
+  return User.updateUser(user.id, newData);
 };
 
 export const deleteUser = async email => {
