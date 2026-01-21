@@ -21,12 +21,7 @@ router.use(authController.protect);
 router
   .route('/me')
   .get(userController.getUser)
-  .patch(
-    userController.validateUserName,
-    userController.validateUserData,
-    userController.updateUser,
-  )
-  .delete(authController.protect, userController.deleteUser);
+  .patch(userController.updateUser);
 
 router.patch(
   '/me/password',
@@ -41,5 +36,8 @@ router
   .route('/')
   .get(userController.getAllUsers)
   .post(appValidators.validateUserData, userController.createUser);
+
+router.route('/:email').delete(userController.deleteUser);
+router.route('/:id').patch(userController.updateUserForAdmins);
 
 export default router;

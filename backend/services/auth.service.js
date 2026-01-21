@@ -100,7 +100,7 @@ export const login = async (email, password) => {
   }
 
   // Check user and password
-  const user = await Auth.findUserToLogIn(email);
+  const user = await Auth.findUserToLogIn(email.toLowerCase().trim());
   const isPasswordValid = await _comparePassword(password, user.password);
   if (!user || !isPasswordValid || !user?.active)
     throw new AppError(401, 'El email o la contraseña son incorrectos');
@@ -164,7 +164,7 @@ export const sendResetPasswordEmail = (email, resetCode) => {
     html = html.replace(`{%N${i}%}`, digit[i]);
   });
 
-  sendEmail({ email: email, subject, text, html });
+  sendEmail({ email, subject, text, html });
 };
 
 export const resetPassword = async (code, password) => {

@@ -4,7 +4,7 @@ import catchAsync from '../utils/catch-async.js';
 
 export const getAllUsers = catchAsync(async (req, res, next) => {
   // Execute the query
-  const users = await User.find();
+  const users = await userService.getAllUsers();
 
   // Send response
   res.status(200).json({
@@ -39,19 +39,9 @@ export const getUser = catchAsync(async (req, res, next) => {
 });
 
 export const updateUser = catchAsync(async (req, res, next) => {
-  const allowedFields = ['name', 'username', 'email', 'data', 'config'];
-  const filteredBody = _filterFields(req.body, allowedFields);
-
-  // Nested fields shoud be flattened and use $set operator
-  // in order to not loose all the missing data
-  const user = await User.findByIdAndUpdate(
-    req.user.id,
-    { $set: filteredBody },
-    {
-      new: true,
-      runValidators: true,
-    },
-  );
+  const user = await userService.updateUser(req.user.id, {
+    fullName: req.body.fullName,
+  });
 
   res.status(200).json({
     status: 'success',
@@ -61,4 +51,29 @@ export const updateUser = catchAsync(async (req, res, next) => {
   });
 });
 
-export const deleteUser = catchAsync(async (req, res, next) => {});
+export const updateUserForAdmins = catchAsync(async (req, res, next) => {
+  const { email, fullName, role } = req.body;
+  const user = await userService.updateUser(req.params.id, {
+    email,
+    fullName,
+    role,
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user,
+    },
+  });
+});
+
+export const deleteUser = catchAsync(async (req, res, next) => {
+  const user = await userService.deleteUser(req.params.email);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user,
+    },
+  });
+});
