@@ -27,7 +27,7 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
 });
 
 export const resetPassword = catchAsync(async (req, res, next) => {
-  const { user, token } = authService.resetPassword(
+  const { user, token } = await authService.resetPassword(
     req.params.code,
     req.body.password,
   );
@@ -36,7 +36,7 @@ export const resetPassword = catchAsync(async (req, res, next) => {
 });
 
 export const protect = catchAsync(async (req, res, next) => {
-  const currentUser = authService.protectRoute(req.cookies.jwt);
+  const currentUser = await authService.protectRoute(req.cookies.jwt);
 
   // Grant ACCESS to the protected route
   req.user = currentUser;

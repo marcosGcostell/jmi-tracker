@@ -30,7 +30,7 @@ export const createUser = async data => {
 };
 
 export const updateUser = async (id, data) => {
-  const { email, fullName, role, active } = req.body;
+  const { email, fullName, role, active } = data;
 
   const user = await User.getUser(id);
   if (!user)

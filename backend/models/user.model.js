@@ -54,16 +54,16 @@ export const createUser = async data => {
 };
 
 export const updateUser = async (id, data) => {
-  const { email, fullName, role } = data;
+  const { email, fullName, role, active } = data;
 
   const { rows } = await pool().query(
     `
     UPDATE users
-    SET email = $1, full_name = $2, role = $3
-    WHERE id = $4
+    SET email = $1, full_name = $2, role = $3, active = $4
+    WHERE id = $5
     RETURNING id, email, full_name, role
     `,
-    [email, fullName, role, id],
+    [email, fullName, role, active, id],
   );
 
   return rows[0];
