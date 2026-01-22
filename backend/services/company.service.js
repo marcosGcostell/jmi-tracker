@@ -5,6 +5,15 @@ export const getAllCompanies = async () => {
   return Company.getAllCompanies();
 };
 
+export const getCompany = async id => {
+  const company = await Company.getCompany(id);
+  if (!company) {
+    throw new AppError(400, 'La empresa no existe.');
+  }
+
+  return company;
+};
+
 export const createCompany = async name => {
   if (!name) {
     throw new AppError(400, 'Se necesita un nombre para crear una empresa.');

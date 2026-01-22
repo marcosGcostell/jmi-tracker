@@ -16,6 +16,20 @@ export const getAllCompanies = catchAsync(async (req, res, next) => {
   });
 });
 
+export const getCompany = catchAsync(async (req, res, next) => {
+  // Execute the query
+  const company = await companyService.getCompany(req.params.id);
+
+  // Send response
+  res.status(200).json({
+    status: 'success',
+    results: companies.length,
+    data: {
+      companies,
+    },
+  });
+});
+
 export const createCompany = catchAsync(async (req, res, next) => {
   // Execute the query
   const company = await companyService.createCompany(req.body?.name);

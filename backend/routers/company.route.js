@@ -14,7 +14,10 @@ router
   .get(companyController.getAllCompanies)
   .post(companyController.createCompany);
 
-router.route('/:id').patch(companyController.udpateCompany);
+router
+  .route('/:id')
+  .get(companyController.getCompany)
+  .patch(companyController.udpateCompany);
 
 // Routes for admins only
 router.use(authController.restrictTo('admin'));
