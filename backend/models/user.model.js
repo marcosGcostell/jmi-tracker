@@ -4,7 +4,7 @@ const pool = () => getPool();
 
 export const getAllUsers = async () => {
   const { rows } = await pool().query(`
-    SELECT id, email, full_name, role
+    SELECT id, email, full_name, role, active
     FROM users
     ORDER BY created_at DESC
     `);
@@ -15,7 +15,7 @@ export const getAllUsers = async () => {
 export const getUser = async id => {
   const { rows } = await pool().query(
     `
-    SELECT id, email, full_name, role
+    SELECT id, email, full_name, role, active
     FROM users
     WHERE id = $1
     `,
@@ -28,7 +28,7 @@ export const getUser = async id => {
 export const getUserByEmail = async email => {
   const { rows } = await pool().query(
     `
-    SELECT id, email, full_name, role
+    SELECT id, email, full_name, role, active
     FROM users
     WHERE email = $1
     `,
@@ -45,7 +45,7 @@ export const createUser = async data => {
     `
     INSERT INTO users (email, full_name, password, role)
     VALUES ($1, $2, $3, $4)
-    RETURNING id, email, full_name, role
+    RETURNING id, email, full_name, role, active
   `,
     [email, fullName, passwordHash, role],
   );
@@ -61,7 +61,7 @@ export const updateUser = async (id, data) => {
     UPDATE users
     SET email = $1, full_name = $2, role = $3, active = $4
     WHERE id = $5
-    RETURNING id, email, full_name, role
+    RETURNING id, email, full_name, role, active
     `,
     [email, fullName, role, active, id],
   );
@@ -75,7 +75,7 @@ export const updateUserPassword = async (id, passwordHash) => {
     UPDATE users
     SET password = $1, password_changed_at = NOW() - INTERVAL '1 second'
     WHERE id = $2
-    RETURNING id, email, full_name, role
+    RETURNING id, email, full_name, role, active
     `,
     [passwordHash, id],
   );
@@ -89,7 +89,7 @@ export const disableUser = async id => {
     UPDATE users
     SET active = false
     WHERE id = $1
-    RETURNING id, email, full_name, role
+    RETURNING id, email, full_name, role, active
     `,
     [id],
   );

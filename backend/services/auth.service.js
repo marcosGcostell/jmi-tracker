@@ -109,7 +109,6 @@ export const login = async data => {
   // Sign token and clean user
   const token = _signToken(user.id);
   user.password = undefined;
-  user.active = undefined;
 
   return { user, token };
 };
@@ -213,7 +212,6 @@ export const protectRoute = async token => {
 
   currentUser.password = undefined;
   currentUser.password_changed_at = undefined;
-  currentUser.active = undefined;
 
   return currentUser;
 };
