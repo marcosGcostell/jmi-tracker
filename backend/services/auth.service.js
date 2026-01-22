@@ -147,7 +147,10 @@ export const saveUserResetCode = async email => {
     .update(resetCode)
     .digest('hex');
 
-  Auth.saveResetCode(user.id, { resetCodeHash, PASSWORD_RESET_EXPIRES });
+  Auth.saveResetCode(user.id, {
+    resetCodeHash,
+    expirationTime: PASSWORD_RESET_EXPIRES,
+  });
 
   return resetCode;
 };
@@ -163,15 +166,15 @@ export const sendResetPasswordEmail = (email, resetCode) => {
 
   html = html.replace('{%LOGO%}', APP_LOGO);
   html = html.replace('{%EXPIRATION%}', PASSWORD_RESET_EXPIRES.toString());
-  resetCode.forEach((digit, i) => {
-    html = html.replace(`{%N${i}%}`, digit[i]);
+  [...resetCode].forEach((digit, i) => {
+    html = html.replace(`{%N${i}%}`, digit);
   });
 
   sendEmail({ email, subject, text, html });
 };
 
 export const resetPassword = async (code, password) => {
-  const resetCodeHash = crypto.createHash('sha256').update(token).digest('hex');
+  const resetCodeHash = crypto.createHash('sha256').update(code).digest('hex');
   const oldUser = await Auth.findUserByResetCode(resetCodeHash);
 
   if (!oldUser)
