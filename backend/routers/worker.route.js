@@ -3,6 +3,7 @@ import express from 'express';
 import * as authController from '../controllers/auth.controller.js';
 import * as companyController from '../controllers/company.controller.js';
 import * as dataValidator from '../middleware/data-validators.js';
+import filterQuery from '../middleware/filter-query.js';
 
 const router = express.Router();
 
@@ -11,7 +12,7 @@ router.use(authController.protect);
 
 router
   .route('/')
-  .get(companyController.getAllCompanies)
+  .get(filterQuery, companyController.getAllCompanies)
   .post(dataValidator.validateDataForWorker, companyController.createCompany);
 
 router

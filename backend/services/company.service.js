@@ -1,8 +1,9 @@
 import * as Company from '../models/company.model.js';
+import * as Worker from '../models/worker.model.js';
 import AppError from '../utils/app-error.js';
 
-export const getAllCompanies = async () => {
-  return Company.getAllCompanies();
+export const getAllCompanies = async onlyActive => {
+  return Company.getAllCompanies(onlyActive);
 };
 
 export const getCompany = async id => {
@@ -12,6 +13,15 @@ export const getCompany = async id => {
   }
 
   return company;
+};
+
+export const getWorkersFromCompany = async (id, onlyActive) => {
+  const company = await Company.getCompany(id);
+  if (!company) {
+    throw new AppError(400, 'La empresa no existe.');
+  }
+
+  return Worker.getWorkersFromCompany(id, onlyActive);
 };
 
 export const createCompany = async name => {

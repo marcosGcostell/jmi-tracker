@@ -11,7 +11,7 @@ export const getAllWorkers = async () => {
     ) AS company
     FROM workers w
     LEFT JOIN companies c ON w.company_id = c.id
-    ORDER BY c.is_main DESC NULLS LAST, c.name ASC, w.full_name ASC
+    ORDER BY c.is_main DESC NULLS LAST, c.name ASC, w.active DESC, w.full_name ASC
     `);
 
   return rows;
@@ -35,7 +35,7 @@ export const getWorker = async id => {
   return rows[0];
 };
 
-export const getWorkersFromCompany = async companyId => {
+export const getWorkersFromCompany = async (companyId, onlyActive) => {
   const { rows } = await pool().query(
     `
     SELECT w.id, w.full_name, w.active,
@@ -46,9 +46,10 @@ export const getWorkersFromCompany = async companyId => {
     FROM workers w
     INNER JOIN companies c ON w.company_id = c.id
     WHERE w.company_id = $1
-    ORDER BY w.full_name ASC
+      AND ($2::BOOLEAN IS NULL OR active = $2)
+    ORDER BY w.active DESC, w.full_name ASC
     `,
-    [companyId],
+    [companyId, onlyActive],
   );
 
   return rows;
