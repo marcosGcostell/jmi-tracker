@@ -2,22 +2,32 @@ import { getPool } from '../db/pool.js';
 
 const pool = () => getPool();
 
-export const getAllCompanies = async () => {
+export const getAllWorkers = async () => {
   const { rows } = await pool().query(`
-    SELECT id, name, is_main, active
-    FROM companies
-    ORDER BY name ASC
+    SELECT w.id, w.full_name, w.active,
+    json_build_object(
+      'id', c.id,
+      'name', c.name
+    ) AS company
+    FROM workers w
+    LEFT JOIN companies c ON w.company_id = c.id
+    ORDER BY c.is_main DESC NULLS LAST, c.name ASC, w.full_name ASC
     `);
 
   return rows;
 };
 
-export const getCompany = async id => {
+export const getWorker = async id => {
   const { rows } = await pool().query(
     `
-    SELECT id, name, is_main, active
-    FROM companies
-    WHERE id = $1
+    SELECT w.id, w.full_name, w.active,
+    json_build_object(
+      'id', c.id,
+      'name', c.name
+    ) AS company
+    FROM workers w
+    LEFT JOIN companies c ON w.company_id = c.id
+    WHERE w.id = $1
     `,
     [id],
   );
@@ -25,57 +35,103 @@ export const getCompany = async id => {
   return rows[0];
 };
 
-export const getCompanyByName = async name => {
+export const getWorkersFromCompany = async companyId => {
   const { rows } = await pool().query(
     `
-    SELECT id, name, is_main, active
-    FROM companies
-    WHERE name = $1
+    SELECT w.id, w.full_name, w.active,
+    json_build_object(
+      'id', c.id,
+      'name', c.name
+    ) AS company
+    FROM workers w
+    INNER JOIN companies c ON w.company_id = c.id
+    WHERE w.company_id = $1
+    ORDER BY w.full_name ASC
     `,
-    [name],
+    [companyId],
+  );
+
+  return rows;
+};
+
+export const findWorker = async (companyId, fullName) => {
+  const { rows } = await pool().query(
+    `
+    SELECT id, full_name, active,
+    FROM workers
+    WHERE w.company_id = $1 AND full_name = $2
+    `,
+    [companyId, fullName],
   );
 
   return rows[0];
 };
 
-export const createCompany = async data => {
-  const { name } = data;
+export const createWorker = async data => {
+  const { companyId, fullName } = data;
 
   const { rows } = await pool().query(
     `
-    INSERT INTO companies (name)
-    VALUES ($1)
-    RETURNING id, name, is_main, active
+    WITH new_worker AS (
+      INSERT INTO workers (company_id, full_name)
+      VALUES ($1, $2)
+      RETURNING id, company_id, full_name, active
+    )
+    SELECT nw.id, nw.full_name, nw.active,
+    json_build_object(
+      'id', c.id,
+      'name', c.name
+    ) AS company
+    FROM new_worker nw
+    JOIN companies c ON c.id = nw.company_id
   `,
-    [name],
+    [companyId, fullName],
   );
 
   return rows[0];
 };
 
-export const updateCompany = async (id, data) => {
-  const { name, isMain, active } = data;
+export const updateWorker = async (id, data) => {
+  const { fullName, userId, companyId, active } = data;
 
   const { rows } = await pool().query(
     `
-    UPDATE companies
-    SET name = $1, is_main = $2, active = $3
-    WHERE id = $4
-    RETURNING id, name, is_main, active
+    WITH updated_worker AS (
+      UPDATE workers
+      SET full_name = $1, user_id = $2, company_id=$3, active = $4
+      WHERE id = $5
+      RETURNING id, company_id, full_name, active
+    )
+    SELECT uw.id, uw.full_name, uw.active,
+    json_build_object(
+      'id', c.id,
+      'name', c.name
+    ) AS company
+    FROM updated_worker uw
+    JOIN companies c ON c.id = uw.company_id
   `,
-    [name, isMain, active, id],
+    [fullName, userId, companyId, active, id],
   );
 
   return rows[0];
 };
 
-export const disableCompany = async id => {
+export const disableWorker = async id => {
   const { rows } = await pool().query(
     `
-    UPDATE companies
-    SET active = false
-    WHERE id = $1
-    RETURNING id, name, is_main, active
+    WITH updated_worker AS (
+      UPDATE workers
+      SET active = false
+      WHERE id = $1
+      RETURNING id, company_id, full_name, active
+    )
+    SELECT uw.id, uw.full_name, uw.active,
+    json_build_object(
+      'id', c.id,
+      'name', c.name
+    ) AS company
+    FROM updated_worker uw
+    JOIN companies c ON c.id = uw.company_id
     `,
     [id],
   );

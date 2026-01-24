@@ -6,7 +6,7 @@ export const getAllCompanies = async () => {
   const { rows } = await pool().query(`
     SELECT id, name, is_main, active
     FROM companies
-    ORDER BY name ASC
+    ORDER BY is_main DESC NULLS LAST, name ASC
     `);
 
   return rows;

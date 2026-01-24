@@ -2,6 +2,7 @@ import express from 'express';
 
 import * as authController from '../controllers/auth.controller.js';
 import * as companyController from '../controllers/company.controller.js';
+import * as dataValidator from '../middleware/data-validators.js';
 
 const router = express.Router();
 
@@ -11,7 +12,7 @@ router.use(authController.protect);
 router
   .route('/')
   .get(companyController.getAllCompanies)
-  .post(companyController.createCompany);
+  .post(dataValidator.validateDataForCompany, companyController.createCompany);
 
 router
   .route('/:id')

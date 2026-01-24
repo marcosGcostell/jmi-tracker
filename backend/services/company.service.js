@@ -34,18 +34,18 @@ export const createCompany = async name => {
 export const updateCompany = async (id, data) => {
   const { name, isMain, active } = data;
 
-  const oldCompany = await Company.getCompany(id);
-  if (!oldCompany) {
+  const company = await Company.getCompany(id);
+  if (!company) {
     throw new AppError(400, 'La empresa no existe.');
   }
 
-  const company = await Company.updateCompany(id, {
-    name: name?.trim() || oldCompany.name,
-    isMain: isMain ?? oldCompany.is_main ?? false,
-    active: active ?? oldCompany.active ?? true,
-  });
+  const newData = {
+    name: name?.trim() || company.name,
+    isMain: isMain ?? company.is_main ?? false,
+    active: active ?? company.active ?? true,
+  };
 
-  return company;
+  return Company.updateCompany(id, newData);
 };
 
 export const deleteCompany = async id => {
