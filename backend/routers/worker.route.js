@@ -1,7 +1,7 @@
 import express from 'express';
 
 import * as authController from '../controllers/auth.controller.js';
-import * as companyController from '../controllers/company.controller.js';
+import * as workerController from '../controllers/worker.controller.js';
 import * as dataValidator from '../middleware/data-validators.js';
 import filterQuery from '../middleware/filter-query.js';
 
@@ -12,21 +12,17 @@ router.use(authController.protect);
 
 router
   .route('/')
-  .get(filterQuery, companyController.getAllCompanies)
-  .post(dataValidator.validateDataForCompany, companyController.createCompany);
+  .get(filterQuery, workerController.getAllWorkers)
+  .post(dataValidator.validateDataForWorker, workerController.createWorker);
 
 router
   .route('/:id')
-  .get(companyController.getCompany)
-  .patch(companyController.udpateCompany);
-
-router
-  .route('/:id/workers')
-  .get(filterQuery, companyController.getWorkersFromCompany);
+  .get(workerController.getWorker)
+  .patch(workerController.updateWorker);
 
 // Routes for admins only
 router.use(authController.restrictTo('admin'));
 
-router.route('/:id').delete(companyController.deleteCompany);
+router.route('/:id').delete(workerController.deleteWorker);
 
 export default router;

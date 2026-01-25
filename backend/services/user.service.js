@@ -6,6 +6,16 @@ export const getAllUsers = async () => {
   return User.getAllUsers();
 };
 
+export const getUser = async id => {
+  const { email, fullName, password, role } = data;
+
+  if (!id) {
+    throw new AppError(409, 'El usuario no exite.');
+  }
+
+  return User.getUser(id);
+};
+
 export const createUser = async data => {
   const { email, fullName, password, role } = data;
 
@@ -48,8 +58,8 @@ export const updateUser = async (id, data) => {
   return User.updateUser(user.id, newData);
 };
 
-export const deleteUser = async email => {
-  const user = await User.getUserByEmail(email?.toLowerCase().trim());
+export const deleteUser = async id => {
+  const user = await User.getUser(id);
   if (!user || !user?.active)
     throw new AppError(
       400,

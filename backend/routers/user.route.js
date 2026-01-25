@@ -18,10 +18,7 @@ router.post(
 // Routes for logged in users
 router.use(authController.protect);
 
-router
-  .route('/me')
-  .get(userController.getUser)
-  .patch(userController.updateUser);
+router.route('/me').get(userController.getUser).patch(userController.updateMe);
 
 router.patch(
   '/me/password',
@@ -37,7 +34,14 @@ router
   .get(userController.getAllUsers)
   .post(appValidators.validateUserData, userController.createUser);
 
-router.route('/:email').delete(userController.deleteUser);
-router.route('/:id').patch(userController.updateUserForAdmins);
+router
+  .route('/:id')
+  .get(userController.getUser)
+  .patch(userController.updateUser)
+  .delete(userController.deleteUser);
+
+router
+  .route('/:id/password')
+  .patch(appValidators.validateNewPassword, authController.updateUserPassword);
 
 export default router;

@@ -4,7 +4,7 @@ import catchAsync from '../utils/catch-async.js';
 
 export const getAllCompanies = catchAsync(async (req, res, next) => {
   // Execute the query
-  const companies = await companyService.getAllCompanies();
+  const companies = await companyService.getAllCompanies(req.active);
 
   // Send response
   res.status(200).json({
@@ -25,6 +25,22 @@ export const getCompany = catchAsync(async (req, res, next) => {
     status: 'success',
     data: {
       company,
+    },
+  });
+});
+
+export const getWorkersFromCompany = catchAsync(async (req, res, next) => {
+  // Execute the query
+  const workers = await companyService.getWorkersFromCompany(
+    req.params.id,
+    req.active,
+  );
+
+  // Send response
+  res.status(200).json({
+    status: 'success',
+    data: {
+      workers,
     },
   });
 });

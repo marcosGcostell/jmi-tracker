@@ -2,12 +2,16 @@ import { getPool } from '../db/pool.js';
 
 const pool = () => getPool();
 
-export const getAllCompanies = async () => {
-  const { rows } = await pool().query(`
+export const getAllCompanies = async onlyActive => {
+  const { rows } = await pool().query(
+    `
     SELECT id, name, is_main, active
     FROM companies
-    ORDER BY name ASC
-    `);
+    WHERE ($1::BOOLEAN IS NULL OR active = $1)
+    ORDER BY is_main DESC NULLS LAST, name ASC
+    `,
+    [onlyActive],
+  );
 
   return rows;
 };

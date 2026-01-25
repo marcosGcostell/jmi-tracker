@@ -14,6 +14,15 @@ export const updatePassword = catchAsync(async (req, res, next) => {
   sendAuthResponse(res, { user, token, status: 200 });
 });
 
+export const updateUserPassword = catchAsync(async (req, res, next) => {
+  const { user, token } = await authService.updateUserPassword(
+    req.params.id,
+    req.body,
+  );
+
+  sendAuthResponse(res, { user, token, status: 200 });
+});
+
 export const forgotPassword = catchAsync(async (req, res, next) => {
   const resetCode = await authService.saveUserResetCode(req.body.email);
   authService.sendResetPasswordEmail(req.body.email, resetCode);

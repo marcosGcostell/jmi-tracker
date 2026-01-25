@@ -1,8 +1,9 @@
 import * as Company from '../models/company.model.js';
+import * as Worker from '../models/worker.model.js';
 import AppError from '../utils/app-error.js';
 
-export const getAllCompanies = async () => {
-  return Company.getAllCompanies();
+export const getAllCompanies = async onlyActive => {
+  return Company.getAllCompanies(onlyActive);
 };
 
 export const getCompany = async id => {
@@ -12,6 +13,15 @@ export const getCompany = async id => {
   }
 
   return company;
+};
+
+export const getWorkersFromCompany = async (id, onlyActive) => {
+  const company = await Company.getCompany(id);
+  if (!company) {
+    throw new AppError(400, 'La empresa no existe.');
+  }
+
+  return Worker.getWorkersFromCompany(id, onlyActive);
 };
 
 export const createCompany = async name => {
@@ -34,27 +44,27 @@ export const createCompany = async name => {
 export const updateCompany = async (id, data) => {
   const { name, isMain, active } = data;
 
-  const oldCompany = await Company.getCompany(id);
-  if (!oldCompany) {
+  const company = await Company.getCompany(id);
+  if (!company) {
     throw new AppError(400, 'La empresa no existe.');
   }
 
-  const company = await Company.updateCompany(id, {
-    name: name?.trim() || oldCompany.name,
-    isMain: isMain ?? oldCompany.is_main ?? false,
-    active: active ?? oldCompany.active ?? true,
-  });
+  const newData = {
+    name: name?.trim() || company.name,
+    isMain: isMain ?? company.is_main ?? false,
+    active: active ?? company.active ?? true,
+  };
 
-  return company;
+  return Company.updateCompany(id, newData);
 };
 
 export const deleteCompany = async id => {
   const company = await Company.getCompany(id);
   if (!company || !company?.active)
-    throw new AppError(400, 'La empresa no existe o ya está deshabilitada');
+    throw new AppError(400, 'La empresa no existe o ya está deshabilitada.');
 
   if (company.is_main)
-    throw new AppError(400, 'No se puede deshabilitar la empresa principal');
+    throw new AppError(400, 'No se puede deshabilitar la empresa principal.');
 
   return Company.disableCompany(company.id);
 };

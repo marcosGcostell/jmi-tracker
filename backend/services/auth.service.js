@@ -116,15 +116,37 @@ export const login = async data => {
 export const updatePassword = async (loggedUser, data) => {
   const { oldPassword, password } = data;
 
-  const oldUser = await Auth.findUserToAuth(loggedUser.id);
-  const isPasswordValid = await _comparePassword(oldPassword, oldUser.password);
+  const userToUpdate = await Auth.findUserToAuth(loggedUser.id);
+  const isPasswordValid = await _comparePassword(
+    oldPassword,
+    userToUpdate.password,
+  );
 
   if (!isPasswordValid)
     throw new AppError(401, 'La contraseña actual no es correcta.');
 
   const passwordHash = await validateAndHashPassword(password);
 
-  const user = await User.updateUserPassword(oldUser.id, passwordHash);
+  const user = await User.updateUserPassword(userToUpdate.id, passwordHash);
+  const token = _signToken(user.id);
+
+  return { user, token };
+};
+
+export const updateUserPassword = async (userId, data) => {
+  const userToUpdate = await Auth.findUserToAuth(userId);
+
+  if (!userToUpdate?.id) throw new AppError(400, 'El usuario no existe.');
+
+  if (!userToUpdate.role === 'admin')
+    throw new AppError(
+      403,
+      'No se puede cambiar la contraseña de un administrador. Utiliza el enlace de contraseña olvidada.',
+    );
+
+  const passwordHash = await validateAndHashPassword(password);
+
+  const user = await User.updateUserPassword(userToUpdate.id, passwordHash);
   const token = _signToken(user.id);
 
   return { user, token };
@@ -174,17 +196,17 @@ export const sendResetPasswordEmail = (email, resetCode) => {
 
 export const resetPassword = async (code, password) => {
   const resetCodeHash = crypto.createHash('sha256').update(code).digest('hex');
-  const oldUser = await Auth.findUserByResetCode(resetCodeHash);
+  const userToUpdate = await Auth.findUserByResetCode(resetCodeHash);
 
-  if (!oldUser)
+  if (!userToUpdate)
     throw new AppError(400, 'El código no es correcto o ha expirado.');
-  if (!oldUser?.active)
+  if (!userToUpdate?.active)
     throw new AppError(400, 'Este usuario ya no tiene una cuenta registrada.');
 
   const passwordHash = await validateAndHashPassword(password);
 
-  Auth.cleanResetCode(oldUser.id);
-  const user = await User.updateUserPassword(oldUser.id, passwordHash);
+  Auth.cleanResetCode(userToUpdate.id);
+  const user = await User.updateUserPassword(userToUpdate.id, passwordHash);
 
   const token = _signToken(user.id);
 

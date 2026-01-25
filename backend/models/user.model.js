@@ -6,7 +6,7 @@ export const getAllUsers = async () => {
   const { rows } = await pool().query(`
     SELECT id, email, full_name, role, active
     FROM users
-    ORDER BY created_at DESC
+    ORDER BY role ASC, full_name ASC
     `);
 
   return rows;

@@ -28,7 +28,9 @@ export const createUser = catchAsync(async (req, res, next) => {
 });
 
 export const getUser = catchAsync(async (req, res, next) => {
-  const { user } = req;
+  const user = req.params?.id
+    ? await userService.getUser(req.params.id)
+    : req.user;
 
   res.status(200).json({
     status: 'success',
@@ -38,7 +40,7 @@ export const getUser = catchAsync(async (req, res, next) => {
   });
 });
 
-export const updateUser = catchAsync(async (req, res, next) => {
+export const updateMe = catchAsync(async (req, res, next) => {
   const user = await userService.updateUser(req.user.id, {
     fullName: req.body.fullName,
   });
@@ -51,7 +53,7 @@ export const updateUser = catchAsync(async (req, res, next) => {
   });
 });
 
-export const updateUserForAdmins = catchAsync(async (req, res, next) => {
+export const updateUser = catchAsync(async (req, res, next) => {
   const user = await userService.updateUser(req.params.id, req.body);
 
   res.status(200).json({
@@ -63,7 +65,7 @@ export const updateUserForAdmins = catchAsync(async (req, res, next) => {
 });
 
 export const deleteUser = catchAsync(async (req, res, next) => {
-  const user = await userService.deleteUser(req.params.email);
+  const user = await userService.deleteUser(req.params.id);
 
   res.status(200).json({
     status: 'success',
