@@ -3,6 +3,7 @@ import express from 'express';
 import * as authController from '../controllers/auth.controller.js';
 import * as userController from '../controllers/user.controller.js';
 import * as appValidators from '../middleware/app-validators.js';
+import filterQuery from '../middleware/filter-query.js';
 
 const router = express.Router();
 
@@ -43,5 +44,7 @@ router
 router
   .route('/:id/password')
   .patch(appValidators.validateNewPassword, authController.updateUserPassword);
+
+router.route('/:id/worksites').get(filterQuery, userController.findMyWorkSites);
 
 export default router;

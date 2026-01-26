@@ -29,23 +29,6 @@ export const getWorkSite = catchAsync(async (req, res, next) => {
   });
 });
 
-export const getMyWorkSites = catchAsync(async (req, res, next) => {
-  // Execute the query
-  const workSites = await workSiteService.getMyWorkSites(
-    req.user.id,
-    req.active,
-  );
-
-  // Send response
-  res.status(200).json({
-    status: 'success',
-    results: workSites.length,
-    data: {
-      workSites,
-    },
-  });
-});
-
 export const createWorkSite = catchAsync(async (req, res, next) => {
   // Execute the query
   const workSite = await workSiteService.createWorkSite(req.body);

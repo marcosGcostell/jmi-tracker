@@ -1,6 +1,6 @@
 import catchAsync from '../utils/catch-async.js';
 import AppError from '../utils/app-error.js';
-import validator from '../utils/validators.js';
+import { validateDate } from '../utils/validators.js';
 
 export const validateDataForCompany = catchAsync(async (req, res, next) => {
   const { name } = req.body;
@@ -39,7 +39,7 @@ export const validateDataForWorkSites = catchAsync(async (req, res, next) => {
     );
   }
 
-  if (startDate && !validator.validateDate(new Date(startDate))) {
+  if (startDate && !validateDate(new Date(startDate))) {
     return next(
       new AppError(
         400,

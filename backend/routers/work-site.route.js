@@ -10,9 +10,6 @@ const router = express.Router();
 // Routes for logged in users
 router.use(authController.protect);
 
-router
-  .route('/my-work-sites')
-  .get(filterQuery, workSiteController.getMyWorkSites);
 router.route('/:id').get(workSiteController.getWorkSite);
 
 // Routes for admins only

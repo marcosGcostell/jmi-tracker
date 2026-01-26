@@ -9,6 +9,7 @@ import rateLimit from 'express-rate-limit';
 import userRouter from './routers/user.route.js';
 import companyRouter from './routers/company.route.js';
 import workerRouter from './routers/worker.route.js';
+import workSiteRouter from './routers/work-site.route.js';
 import globalErrorHandler from './controllers/error.controller.js';
 
 dotenv.config({ path: './config.env' });
@@ -52,6 +53,7 @@ app.use((req, res, next) => {
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/companies', companyRouter);
 app.use('/api/v1/workers', workerRouter);
+app.use('/api/v1/worksites', workSiteRouter);
 
 // ERROR MIDDLEWARE
 app.use(globalErrorHandler);

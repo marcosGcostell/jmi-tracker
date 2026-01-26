@@ -1,4 +1,5 @@
 import * as User from '../models/user.model.js';
+import * as WorkSite from '../models/work-site.model.js';
 import * as authService from './auth.service.js';
 import AppError from '../utils/app-error.js';
 
@@ -14,6 +15,15 @@ export const getUser = async id => {
   }
 
   return User.getUser(id);
+};
+
+export const findMyWorkSites = async (userId, onlyActive) => {
+  const workSites = await WorkSite.findMyWorkSites(userId, onlyActive);
+  if (!workSites.length) {
+    throw new AppError(400, 'El usuario no tiene obras asignadas.');
+  }
+
+  return workSites;
 };
 
 export const createUser = async data => {

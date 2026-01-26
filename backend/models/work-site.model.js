@@ -2,7 +2,7 @@ import { getPool } from '../db/pool.js';
 
 const pool = () => getPool();
 
-export const _assignUsers = async (client, workSiteId, userIds) => {
+const _assignUsers = async (client, workSiteId, userIds) => {
   const values = userIds.map((_, i) => `($1, $${i + 2})`).join(',');
 
   await client.query(
@@ -13,6 +13,31 @@ export const _assignUsers = async (client, workSiteId, userIds) => {
     `,
     [workSiteId, ...userIds],
   );
+};
+
+const _getFullWorkSite = async (client, workSiteId) => {
+  const { rows } = await client.query(
+    `
+    SELECT w.id, w.name, w.code, w.is_open, w.start_date, w.end_date,
+    COALESCE(
+      json_agg(
+        json_build_object(
+          'id', u.id,
+          'full_name', u.full_name
+        )
+      ) FILTER (WHERE u.id IS NOT NULL),
+      '[]'
+    ) AS users
+    FROM work_sites w
+    LEFT JOIN user_work_sites uw ON uw.work_site_id = w.id
+    LEFT JOIN users u ON u.id = uw.user_id 
+    WHERE w.id = $1
+    GROUP BY w.id
+    `,
+    [workSiteId],
+  );
+
+  return rows[0];
 };
 
 export const getAllWorkSites = async onlyActive => {
@@ -41,7 +66,7 @@ export const getAllWorkSites = async onlyActive => {
   return rows;
 };
 
-export const getMyWorkSites = async (userId, onlyActive = null) => {
+export const findMyWorkSites = async (userId, onlyActive = null) => {
   const { rows } = await pool().query(
     `
     SELECT w.id, w.name, w.code, w.is_open, w.start_date, w.end_date,
@@ -67,7 +92,9 @@ export const getMyWorkSites = async (userId, onlyActive = null) => {
   return rows;
 };
 
-export const getWorkSite = async id => {
+export const getWorkSite = async id => _getFullWorkSite(pool(), id);
+
+export const getWorkSiteByCode = async code => {
   const { rows } = await pool().query(
     `
     SELECT w.id, w.name, w.code, w.is_open, w.start_date, w.end_date,
@@ -83,33 +110,10 @@ export const getWorkSite = async id => {
     FROM work_sites w
     LEFT JOIN user_work_sites uw ON uw.work_site_id = w.id
     LEFT JOIN users u ON u.id = uw.user_id 
-    WHERE w.id = $1
+    WHERE w.code = $1
+    GROUP BY w.id
     `,
-    [id],
-  );
-
-  return rows[0];
-};
-
-export const getWorkSiteByCode = async id => {
-  const { rows } = await pool().query(
-    `
-    SELECT w.id, w.name, w.code, w.is_open, w.start_date, w.end_date,
-    COALESCE(
-      json_agg(
-        json_build_object(
-          'id', u.id,
-          'full_name', u.full_name
-        )
-      ) FILTER (WHERE u.id IS NOT NULL),
-      '[]'
-    ) AS users
-    FROM work_sites w
-    LEFT JOIN user_work_sites uw ON uw.work_site_id = w.id
-    LEFT JOIN users u ON u.id = uw.user_id 
-    WHERE w.id = $1
-    `,
-    [id],
+    [code],
   );
 
   return rows[0];
@@ -135,8 +139,10 @@ export const createWorkSite = async (data, userIds) => {
       await _assignUsers(client, rows[0].id, userIds);
     }
 
+    const workSite = await _getFullWorkSite(client, rows[0].id);
+
     await client.query('COMMIT');
-    return rows[0];
+    return workSite;
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
@@ -179,8 +185,10 @@ export const updateWorkSite = async (id, data, userIds) => {
       }
     }
 
+    const workSite = await _getFullWorkSite(client, rows[0].id);
+
     await client.query('COMMIT');
-    return rows[0];
+    return workSite;
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
