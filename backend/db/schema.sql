@@ -136,5 +136,5 @@ CREATE INDEX idx_time_entries_work_site ON  time_entries(work_site_id);
 CREATE INDEX idx_work_sites_is_open ON work_sites (is_open);
 
 -- Availability
-CREATE INDEX idx_vacations_worker ON vacations(worker_id);
-CREATE INDEX idx_sick_leaves_worker ON sick_leaves(worker_id);
+CREATE INDEX idx_vacations_worker ON vacations(worker_id, start_date, end_date);
+CREATE INDEX idx_sick_leaves_worker ON sick_leaves(worker_id, start_date, end_date);

@@ -14,8 +14,8 @@ export const getWorker = async id => {
   return worker;
 };
 
-export const getWorkersFromCompany = async companyId => {
-  const workers = await Worker.getWorkersFromCompany(companyId);
+export const getCompanyWorkers = async companyId => {
+  const workers = await Worker.getCompanyWorkers(companyId);
   if (!workers.length) {
     throw new AppError(400, 'La empresa no tiene trabajadores.');
   }
