@@ -12,7 +12,7 @@ export const getAllWorkers = async onlyActive => {
     ) AS company
     FROM workers w
     LEFT JOIN companies c ON w.company_id = c.id
-    WHERE ($1::BOOLEAN IS NULL OR active = $1)
+    WHERE ($1::BOOLEAN IS NULL OR w.active = $1)
     ORDER BY c.is_main DESC NULLS LAST, c.name ASC, w.active DESC, w.full_name ASC
     `,
     [onlyActive],
@@ -24,7 +24,7 @@ export const getAllWorkers = async onlyActive => {
 export const getWorker = async id => {
   const { rows } = await pool().query(
     `
-    SELECT w.id, w.full_name, w.active,
+    SELECT w.id, w.full_name, w.user_id, w.active,
     json_build_object(
       'id', c.id,
       'name', c.name
@@ -50,7 +50,7 @@ export const getWorkersFromCompany = async (companyId, onlyActive) => {
     FROM workers w
     INNER JOIN companies c ON w.company_id = c.id
     WHERE w.company_id = $1
-      AND ($2::BOOLEAN IS NULL OR active = $2)
+      AND ($2::BOOLEAN IS NULL OR w.active = $2)
     ORDER BY w.active DESC, w.full_name ASC
     `,
     [companyId, onlyActive],
@@ -62,9 +62,9 @@ export const getWorkersFromCompany = async (companyId, onlyActive) => {
 export const findWorker = async (companyId, fullName) => {
   const { rows } = await pool().query(
     `
-    SELECT id, full_name, active,
+    SELECT id, full_name, active
     FROM workers
-    WHERE w.company_id = $1 AND full_name = $2
+    WHERE company_id = $1 AND full_name = $2
     `,
     [companyId, fullName],
   );

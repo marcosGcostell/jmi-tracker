@@ -46,6 +46,7 @@ export const createWorker = async data => {
 };
 
 export const updateWorker = async (id, data, userRole) => {
+  console.log(id, data, userRole);
   const { fullName, userId, companyId, active } = data;
 
   const worker = await Worker.getWorker(id);
@@ -53,13 +54,17 @@ export const updateWorker = async (id, data, userRole) => {
     throw new AppError(400, 'El trabajador no existe.');
   }
 
+  // Users can only change the fullName field
   const newData = {
-    fullName: fullName.trim() || worker.full_name,
+    fullName: fullName?.trim() || worker.full_name,
+    userId: worker.userId,
+    companyId: worker.company.id,
+    active: worker.active,
   };
 
   if (userRole === 'admin') {
     newData.userId = userId ?? worker.userId;
-    newData.companyId = companyId || worker.companyId;
+    newData.companyId = companyId || worker.company.id;
     newData.active = active ?? worker.active ?? true;
   }
 

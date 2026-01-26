@@ -12,7 +12,6 @@ router.use(authController.protect);
 
 router
   .route('/')
-  .get(filterQuery, workerController.getAllWorkers)
   .post(dataValidator.validateDataForWorker, workerController.createWorker);
 
 router
@@ -22,6 +21,8 @@ router
 
 // Routes for admins only
 router.use(authController.restrictTo('admin'));
+
+router.route('/').get(filterQuery, workerController.getAllWorkers);
 
 router.route('/:id').delete(workerController.deleteWorker);
 
