@@ -50,3 +50,36 @@ export const validateDataForWorkSites = catchAsync(async (req, res, next) => {
 
   next();
 });
+
+export const validateDataForVacations = catchAsync(async (req, res, next) => {
+  const { workerId, startDate, endDate } = req.body;
+
+  if (!workerId || !startDate || !endDate) {
+    return next(
+      new AppError(
+        400,
+        'Se necesita la identificación del trabajador, una fecha de comienzo y una fecha de final para establecer un periodo vacacional.',
+      ),
+    );
+  }
+
+  if (startDate && !validateDate(new Date(startDate))) {
+    return next(
+      new AppError(
+        400,
+        'La fecha de inicio de las vacaciones no está en el formato correcto.',
+      ),
+    );
+  }
+
+  if (endDate && !validateDate(new Date(endDate))) {
+    return next(
+      new AppError(
+        400,
+        'La fecha de fin de las vacaciones no está en el formato correcto.',
+      ),
+    );
+  }
+
+  next();
+});

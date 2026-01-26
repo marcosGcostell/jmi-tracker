@@ -29,11 +29,12 @@ export const getCompany = catchAsync(async (req, res, next) => {
   });
 });
 
-export const getWorkersFromCompany = catchAsync(async (req, res, next) => {
+export const getCompanyWorkers = catchAsync(async (req, res, next) => {
   // Execute the query
-  const workers = await companyService.getWorkersFromCompany(
+  const workers = await companyService.getCompanyWorkers(
     req.params.id,
     req.active,
+    req.date,
   );
 
   // Send response

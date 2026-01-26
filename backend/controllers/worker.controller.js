@@ -28,6 +28,18 @@ export const getWorker = catchAsync(async (req, res, next) => {
   });
 });
 
+export const getWorkerVacations = catchAsync(async (req, res, next) => {
+  const vacations = await workerService.getWorkerVacations(req.params.id);
+
+  // Send response
+  res.status(200).json({
+    status: 'success',
+    data: {
+      vacations,
+    },
+  });
+});
+
 export const createWorker = catchAsync(async (req, res, next) => {
   // Execute the query
   const worker = await workerService.createWorker(req.body);

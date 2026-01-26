@@ -6,10 +6,10 @@ export const getAllWorkers = async onlyActive => {
   const { rows } = await pool().query(
     `
     SELECT w.id, w.full_name, w.active,
-    json_build_object(
-      'id', c.id,
-      'name', c.name
-    ) AS company
+      json_build_object(
+        'id', c.id,
+        'name', c.name
+      ) AS company
     FROM workers w
     LEFT JOIN companies c ON w.company_id = c.id
     WHERE ($1::BOOLEAN IS NULL OR w.active = $1)
@@ -25,10 +25,10 @@ export const getWorker = async id => {
   const { rows } = await pool().query(
     `
     SELECT w.id, w.full_name, w.user_id, w.active,
-    json_build_object(
-      'id', c.id,
-      'name', c.name
-    ) AS company
+      json_build_object(
+        'id', c.id,
+        'name', c.name
+      ) AS company
     FROM workers w
     LEFT JOIN companies c ON w.company_id = c.id
     WHERE w.id = $1
@@ -39,14 +39,10 @@ export const getWorker = async id => {
   return rows[0];
 };
 
-export const getWorkersFromCompany = async (companyId, onlyActive) => {
+export const getCompanyWorkers = async (companyId, onlyActive) => {
   const { rows } = await pool().query(
     `
-    SELECT w.id, w.full_name, w.active,
-    json_build_object(
-      'id', c.id,
-      'name', c.name
-    ) AS company
+    SELECT w.id, w.full_name, w.active, c.name AS company
     FROM workers w
     INNER JOIN companies c ON w.company_id = c.id
     WHERE w.company_id = $1
@@ -59,12 +55,39 @@ export const getWorkersFromCompany = async (companyId, onlyActive) => {
   return rows;
 };
 
+export const getCompanyWorkersWithStatus = async (
+  companyId,
+  onlyActive,
+  date,
+) => {
+  const { rows } = await pool().query(
+    `
+    SELECT w.id, w.full_name, w.active, c.name AS company
+    FROM workers w
+    INNER JOIN companies c ON w.company_id = c.id
+    LEFT JOIN vacations v
+      ON v.worker_id = w.id
+      AND $1 BETWEEN v.start_date AND v.end_date
+    LEFT JOIN sick_leaves l
+      ON l.worker_id = w.id
+      AND $1 BETWEEN l.start_date AND l.end_date
+    WHERE w.company_id = $2
+      AND ($3::BOOLEAN IS NULL OR w.active = $3)
+    ORDER BY w.active DESC, w.full_name ASC
+    `,
+    [date, companyId, onlyActive],
+  );
+
+  return rows;
+};
+
 export const findWorker = async (companyId, fullName) => {
   const { rows } = await pool().query(
     `
-    SELECT id, full_name, active
-    FROM workers
-    WHERE company_id = $1 AND full_name = $2
+    SELECT w.id, w.full_name, w.active, c.name AS company
+    FROM workers w
+    INNER JOIN companies c ON w.company_id = c.id
+    WHERE w.company_id = $1 AND w.full_name = $2
     `,
     [companyId, fullName],
   );
@@ -83,10 +106,10 @@ export const createWorker = async data => {
       RETURNING id, company_id, full_name, active
     )
     SELECT nw.id, nw.full_name, nw.active,
-    json_build_object(
-      'id', c.id,
-      'name', c.name
-    ) AS company
+      json_build_object(
+        'id', c.id,
+        'name', c.name
+      ) AS company
     FROM new_worker nw
     JOIN companies c ON c.id = nw.company_id
   `,
@@ -108,10 +131,10 @@ export const updateWorker = async (id, data) => {
       RETURNING id, company_id, full_name, active
     )
     SELECT uw.id, uw.full_name, uw.active,
-    json_build_object(
-      'id', c.id,
-      'name', c.name
-    ) AS company
+      json_build_object(
+        'id', c.id,
+        'name', c.name
+      ) AS company
     FROM updated_worker uw
     JOIN companies c ON c.id = uw.company_id
   `,
@@ -131,10 +154,10 @@ export const disableWorker = async id => {
       RETURNING id, company_id, full_name, active
     )
     SELECT uw.id, uw.full_name, uw.active,
-    json_build_object(
-      'id', c.id,
-      'name', c.name
-    ) AS company
+      json_build_object(
+        'id', c.id,
+        'name', c.name
+      ) AS company
     FROM updated_worker uw
     JOIN companies c ON c.id = uw.company_id
     `,

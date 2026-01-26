@@ -1,4 +1,5 @@
 import * as Worker from '../models/worker.model.js';
+import * as Vacation from '../models/vacation.model.js';
 import AppError from '../utils/app-error.js';
 
 export const getAllWorkers = async onlyActive => {
@@ -14,13 +15,14 @@ export const getWorker = async id => {
   return worker;
 };
 
-export const getWorkersFromCompany = async companyId => {
-  const workers = await Worker.getWorkersFromCompany(companyId);
-  if (!workers.length) {
-    throw new AppError(400, 'La empresa no tiene trabajadores.');
+export const getWorkerVacations = async id => {
+  const vacations = await Vacation.getWorkerVacations(id);
+
+  if (!vacations) {
+    throw new AppError(400, 'Este trabajador no tiene registradas vacaciones.');
   }
 
-  return workers;
+  return vacations;
 };
 
 export const createWorker = async data => {

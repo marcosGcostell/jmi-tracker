@@ -22,7 +22,7 @@ router
 
 router
   .route('/:id/workers')
-  .get(filterQuery, companyController.getWorkersFromCompany);
+  .get(filterQuery, companyController.getCompanyWorkers);
 
 // Routes for admins only
 router.use(authController.restrictTo('admin'));

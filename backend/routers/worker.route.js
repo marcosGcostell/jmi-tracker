@@ -19,6 +19,8 @@ router
   .get(workerController.getWorker)
   .patch(workerController.updateWorker);
 
+router.route('/:id/vacations').get(workerController.getWorkerVacations);
+
 // Routes for admins only
 router.use(authController.restrictTo('admin'));
 

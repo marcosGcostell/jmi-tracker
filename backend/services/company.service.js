@@ -15,13 +15,23 @@ export const getCompany = async id => {
   return company;
 };
 
-export const getWorkersFromCompany = async (id, onlyActive) => {
+export const getCompanyWorkers = async (id, onlyActive, date) => {
   const company = await Company.getCompany(id);
   if (!company) {
     throw new AppError(400, 'La empresa no existe.');
   }
 
-  return Worker.getWorkersFromCompany(id, onlyActive);
+  if (company.is_main && date) {
+    return Worker.getCompanyWorkersWithStatus(id, onlyActive, date);
+  }
+
+  const workers = Worker.getCompanyWorkers(id, onlyActive);
+
+  if (!workers.length) {
+    throw new AppError(400, 'La empresa no tiene trabajadores.');
+  }
+
+  return workers;
 };
 
 export const createCompany = async name => {
