@@ -25,11 +25,8 @@ export const getWorkersFromCompany = async (id, onlyActive) => {
 };
 
 export const createCompany = async name => {
-  if (!name) {
-    throw new AppError(400, 'Se necesita un nombre para crear una empresa.');
-  }
-
   const companyAlreadyExist = await Company.getCompanyByName(name.trim());
+
   if (companyAlreadyExist?.id) {
     throw new AppError(409, 'Ya hay un empresa registrada con este nombre');
   }

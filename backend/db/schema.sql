@@ -92,7 +92,7 @@ CREATE TABLE vacations (
 
   created_at TIMESTAMPTZ DEFAULT now(),
 
-  CHECK (end_date >= star_date)
+  CHECK (end_date >= start_date)
 );
 
 CREATE TABLE sick_leaves (
@@ -105,7 +105,7 @@ CREATE TABLE sick_leaves (
 
   created_at TIMESTAMPTZ DEFAULT now(),
 
-  CHECK (end_date >= star_date)
+  CHECK (end_date >= start_date)
 );
 
 -- FUNCTIONS

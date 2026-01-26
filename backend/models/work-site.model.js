@@ -18,12 +18,50 @@ export const _assignUsers = async (client, workSiteId, userIds) => {
 export const getAllWorkSites = async onlyActive => {
   const { rows } = await pool().query(
     `
-    SELECT id, name, code, is_open, start_date, end_date
-    FROM work_sites
-    WHERE ($1::BOOLEAN IS NULL OR is_open = $1)
-    ORDER BY star_date DESC NULLS LAST, name ASC
+    SELECT w.id, w.name, w.code, w.is_open, w.start_date, w.end_date,
+    COALESCE(
+      json_agg(
+        json_build_object(
+          'id', u.id,
+          'full_name', u.full_name
+        )
+      ) FILTER (WHERE u.id IS NOT NULL),
+      '[]'
+    ) AS users
+    FROM work_sites w
+    LEFT JOIN user_work_sites uw ON uw.work_site_id = w.id
+    LEFT JOIN users u ON u.id = uw.user_id 
+    WHERE ($1::BOOLEAN IS NULL OR w.is_open = $1)
+    GROUP BY w.id, w.name, w.code, w.is_open, w.start_date, w.end_date
+    ORDER BY w.start_date DESC NULLS LAST, w.name ASC
     `,
     [onlyActive],
+  );
+
+  return rows;
+};
+
+export const getMyWorkSites = async (userId, onlyActive = null) => {
+  const { rows } = await pool().query(
+    `
+    SELECT w.id, w.name, w.code, w.is_open, w.start_date, w.end_date,
+    COALESCE(
+      json_agg(
+        json_build_object(
+          'id', u.id,
+          'full_name', u.full_name
+        )
+      ) FILTER (WHERE u.id IS NOT NULL),
+      '[]'
+    ) AS users
+    FROM work_sites w
+    LEFT JOIN user_work_sites uw ON uw.work_site_id = w.id
+    LEFT JOIN users u ON u.id = uw.user_id 
+    WHERE uw.user_id = $1 AND ($2::BOOLEAN IS NULL OR w.is_open = $2)
+    GROUP BY w.id, w.name, w.code, w.is_open, w.start_date, w.end_date
+    ORDER BY w.start_date DESC NULLS LAST, w.name ASC
+    `,
+    [userId, onlyActive],
   );
 
   return rows;
@@ -32,9 +70,44 @@ export const getAllWorkSites = async onlyActive => {
 export const getWorkSite = async id => {
   const { rows } = await pool().query(
     `
-    SELECT id, name, code, is_open, start_date, end_date
-    FROM work_sites
-    WHERE id = $1
+    SELECT w.id, w.name, w.code, w.is_open, w.start_date, w.end_date,
+    COALESCE(
+      json_agg(
+        json_build_object(
+          'id', u.id,
+          'full_name', u.full_name
+        )
+      ) FILTER (WHERE u.id IS NOT NULL),
+      '[]'
+    ) AS users
+    FROM work_sites w
+    LEFT JOIN user_work_sites uw ON uw.work_site_id = w.id
+    LEFT JOIN users u ON u.id = uw.user_id 
+    WHERE w.id = $1
+    `,
+    [id],
+  );
+
+  return rows[0];
+};
+
+export const getWorkSiteByCode = async id => {
+  const { rows } = await pool().query(
+    `
+    SELECT w.id, w.name, w.code, w.is_open, w.start_date, w.end_date,
+    COALESCE(
+      json_agg(
+        json_build_object(
+          'id', u.id,
+          'full_name', u.full_name
+        )
+      ) FILTER (WHERE u.id IS NOT NULL),
+      '[]'
+    ) AS users
+    FROM work_sites w
+    LEFT JOIN user_work_sites uw ON uw.work_site_id = w.id
+    LEFT JOIN users u ON u.id = uw.user_id 
+    WHERE w.id = $1
     `,
     [id],
   );
@@ -89,6 +162,17 @@ export const updateWorkSite = async (id, data, userIds) => {
       [name, code, startDate, endDate, id],
     );
 
+    // Delete all previous asigned users to this worksite
+    await client.query(
+      `
+    DELETE
+    FROM user_work_sites
+    WHERE work_site_id = $1;
+  `,
+      [id],
+    );
+
+    // Reasign the new list
     if (userIds?.length) {
       await _assignUsers(client, rows[0].id, userIds);
     }
@@ -97,6 +181,9 @@ export const updateWorkSite = async (id, data, userIds) => {
 
     return rows[0];
   } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
   } finally {
+    client.release();
   }
 };

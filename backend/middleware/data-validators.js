@@ -1,5 +1,6 @@
 import catchAsync from '../utils/catch-async.js';
 import AppError from '../utils/app-error.js';
+import validator from '../utils/validators.js';
 
 export const validateDataForCompany = catchAsync(async (req, res, next) => {
   const { name } = req.body;
@@ -23,5 +24,29 @@ export const validateDataForWorker = catchAsync(async (req, res, next) => {
       ),
     );
   }
+  next();
+});
+
+export const validateDataForWorkSites = catchAsync(async (req, res, next) => {
+  const { name, code, startDate } = req.body;
+
+  if (!name?.trim() || !code?.trim()) {
+    return next(
+      new AppError(
+        400,
+        'Para crear una obra se necesita un nombre y un código.',
+      ),
+    );
+  }
+
+  if (startDate && !validator.validateDate(startDate)) {
+    return next(
+      new AppError(
+        400,
+        'La fecha de inicio de la obra no está en el formato correcto.',
+      ),
+    );
+  }
+
   next();
 });

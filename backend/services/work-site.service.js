@@ -1,77 +1,87 @@
-import * as Company from '../models/company.model.js';
-import * as Worker from '../models/worker.model.js';
+import * as WorkSite from '../models/work-site.model.js';
 import AppError from '../utils/app-error.js';
+import validator from '../utils/validators.js';
 
-export const getAllCompanies = async onlyActive => {
-  return Company.getAllCompanies(onlyActive);
+export const getAllWorkSites = async onlyActive => {
+  return WorkSite.getAllWorkSites(onlyActive);
 };
 
-export const getCompany = async id => {
-  const company = await Company.getCompany(id);
-  if (!company) {
-    throw new AppError(400, 'La empresa no existe.');
+export const getWorkSite = async id => {
+  const workSite = await WorkSite.getWorkSite(id);
+  if (!workSite) {
+    throw new AppError(400, 'La obra no existe.');
   }
 
-  return company;
+  return workSite;
 };
 
-export const getWorkersFromCompany = async (id, onlyActive) => {
-  const company = await Company.getCompany(id);
-  if (!company) {
-    throw new AppError(400, 'La empresa no existe.');
+export const getMyWorkSites = async (userId, onlyActive) => {
+  const workSites = await WorkSite.getMyWorkSites(userId, onlyActive);
+  if (!workSites.length) {
+    throw new AppError(400, 'El usuario no tiene obras asignadas.');
   }
 
-  return Worker.getWorkersFromCompany(id, onlyActive);
+  return workSites;
 };
 
-export const createCompany = async name => {
-  if (!name) {
-    throw new AppError(400, 'Se necesita un nombre para crear una empresa.');
-  }
+export const createWorkSite = async (data, userIds) => {
+  const { name, code, startDate } = data;
 
-  const companyAlreadyExist = await Company.getCompanyByName(name.trim());
-  if (companyAlreadyExist?.id) {
-    throw new AppError(409, 'Ya hay un empresa registrada con este nombre');
-  }
-
-  const company = await Company.createCompany({
-    name: name.trim(),
-  });
-
-  return company;
-};
-
-export const updateCompany = async (id, data, isAdmin) => {
-  const { name, isMain, active } = data;
-
-  const company = await Company.getCompany(id);
-  if (!company) {
-    throw new AppError(400, 'La empresa no existe.');
-  }
-
-  if (company.is_main && !isAdmin) {
-    throw new AppError(
-      403,
-      'No tiene permiso para modificar la empresa principal.',
-    );
+  const WorkSiteAlreadyExist = await WorkSite.getWorkSiteByName(code?.trim());
+  if (WorkSiteAlreadyExist?.id) {
+    throw new AppError(409, 'Ya hay una obra registrada con este código.');
   }
 
   const newData = {
-    name: name?.trim() || company.name,
-    isMain: isMain ?? company.is_main ?? false,
-    active: active ?? company.active ?? true,
+    name: name?.trim(),
+    code: code?.trim(),
+    startDate,
   };
 
-  return Company.updateCompany(id, newData);
+  try {
+    return WorkSite.createWorkSite(newData, userIds);
+  } catch (err) {
+    if (err.code === '23503') {
+      throw new AppError(
+        400,
+        'Uno de los usuarios que se intenta asignar, no existe.',
+      );
+    }
+    throw err;
+  }
 };
 
-export const deleteCompany = async id => {
-  const company = await Company.getCompany(id);
-  if (!company || !company?.active)
-    throw new AppError(400, 'La empresa no existe o ya está deshabilitada.');
+export const updateWorkSite = async (id, data, userIds) => {
+  const { name, code, startDate, endDate } = data;
 
-  if (company.is_main)
-    throw new AppError(400, 'No se puede deshabilitar la empresa principal.');
+  const workSite = await WorkSite.getWorkSite(id);
+  if (!workSite) {
+    throw new AppError(400, 'La obra no existe.');
+  }
 
-  return Company.disableCompany(company.id);
+  if (
+    (startDate && !validator.validateDate(startDate)) ||
+    (endDate && !validator.validateDate(endDate))
+  ) {
+    throw new AppError(400, 'Las fechas no están en el formato correcto.');
+  }
+
+  const newData = {
+    name: name?.trim() || workSite.name,
+    code: code?.trim() || workSite.code,
+    startDate: startDate || workSite.start_date,
+    endDate: endDate || workSite.end_date,
+  };
+
+  try {
+    return WorkSite.updateWorkSite(id, newData);
+  } catch (err) {
+    if (err.code === '23503') {
+      throw new AppError(
+        400,
+        'Uno de los usuarios que se intenta asignar no existe.',
+      );
+    }
+    throw err;
+  }
 };
