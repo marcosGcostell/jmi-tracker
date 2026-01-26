@@ -18,7 +18,7 @@ export const _assignUsers = async (client, workSiteId, userIds) => {
 export const getAllWorkSites = async onlyActive => {
   const { rows } = await pool().query(
     `
-    SELECT id, name, code, is_open, star_date, end_date
+    SELECT id, name, code, is_open, start_date, end_date
     FROM work_sites
     WHERE ($1::BOOLEAN IS NULL OR is_open = $1)
     ORDER BY star_date DESC NULLS LAST, name ASC
@@ -32,7 +32,7 @@ export const getAllWorkSites = async onlyActive => {
 export const getWorkSite = async id => {
   const { rows } = await pool().query(
     `
-    SELECT id, name, code, is_open, star_date, end_date
+    SELECT id, name, code, is_open, start_date, end_date
     FROM work_sites
     WHERE id = $1
     `,
@@ -48,23 +48,23 @@ export const createWorkSite = async (data, userIds) => {
   try {
     await client.query('BEGIN');
 
-    const { name, code, starDate } = data;
+    const { name, code, startDate } = data;
     const { rows } = await client.query(
       `
-    INSERT INTO work_sites (name, code, star_date)
+    INSERT INTO work_sites (name, code, start_date)
     VALUES ($1, $2, $3)
-    RETURNING id, name, code, is_open, star_date, end_date
+    RETURNING id, name, code, is_open, start_date, end_date
   `,
-      [name, code, starDate],
+      [name, code, startDate],
     );
 
     if (userIds?.length) {
-      await _assignUsers(client, rows[0].id, data.users);
+      await _assignUsers(client, rows[0].id, userIds);
     }
 
     await client.query('COMMIT');
     return rows[0];
-  } catch (error) {
+  } catch (err) {
     await client.query('ROLLBACK');
     throw err;
   } finally {
@@ -72,18 +72,31 @@ export const createWorkSite = async (data, userIds) => {
   }
 };
 
-export const updateWorkSite = async (id, data) => {
-  const { name, code, starDate, endDate } = data;
+export const updateWorkSite = async (id, data, userIds) => {
+  const client = await pool().connect();
 
-  const { rows } = await pool().query(
-    `
+  try {
+    await client.query('BEGIN');
+
+    const { name, code, startDate, endDate } = data;
+    const { rows } = await client.query(
+      `
     UPDATE work_sites
-    SET name = $1, code = $2, star_date = $3, end_date = $4
+    SET name = $1, code = $2, start_date = $3, end_date = $4
     WHERE id = $5
-    RETURNING id, name, code, is_open, star_date, end_date
+    RETURNING id, name, code, is_open, start_date, end_date
   `,
-    [name, code, starDate, endDate, id],
-  );
+      [name, code, startDate, endDate, id],
+    );
 
-  return rows[0];
+    if (userIds?.length) {
+      await _assignUsers(client, rows[0].id, userIds);
+    }
+
+    await client.query('COMMIT');
+
+    return rows[0];
+  } catch (err) {
+  } finally {
+  }
 };
