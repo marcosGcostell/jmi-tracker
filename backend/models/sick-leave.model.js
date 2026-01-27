@@ -100,6 +100,7 @@ export const deleteSickLeave = async id => {
     DELETE 
     FROM sick_leaves
     WHERE id = $1
+    RETURNING id, worker_id, start_date, end_date
   `,
     [id],
   );

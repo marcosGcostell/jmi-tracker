@@ -78,5 +78,10 @@ export const updateSickLeave = async (id, data) => {
 };
 
 export const deleteSickLeave = async id => {
-  return SickLeave.deleteSickLeave(id);
+  const sickLeave = await SickLeave.deleteSickLeave(id);
+  if (!sickLeave) {
+    throw new AppError(400, 'No se encuentra la baja en el registro.');
+  }
+
+  return sickLeave;
 };
