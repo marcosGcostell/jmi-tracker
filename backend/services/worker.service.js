@@ -1,5 +1,6 @@
 import * as Worker from '../models/worker.model.js';
 import * as Vacation from '../models/vacation.model.js';
+import * as SickLeave from '../models/sick-leave.model.js';
 import AppError from '../utils/app-error.js';
 
 export const getAllWorkers = async onlyActive => {
@@ -23,6 +24,16 @@ export const getWorkerVacations = async (id, period) => {
   }
 
   return vacations;
+};
+
+export const getWorkerSickLeaves = async (id, period) => {
+  const sickLeaves = await SickLeave.getWorkerSickLeaves(id, period);
+
+  if (!sickLeaves) {
+    throw new AppError(400, 'Este trabajador no tiene registradas bajas.');
+  }
+
+  return sickLeaves;
 };
 
 export const createWorker = async data => {

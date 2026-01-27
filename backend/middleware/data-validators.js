@@ -83,3 +83,36 @@ export const validateDataForVacations = catchAsync(async (req, res, next) => {
 
   next();
 });
+
+export const validateDataForSickLeaves = catchAsync(async (req, res, next) => {
+  const { workerId, startDate, endDate } = req.body;
+
+  if (!workerId || !startDate) {
+    return next(
+      new AppError(
+        400,
+        'Se necesita la identificación del trabajador y una fecha de comienzo para establecer un periodo de baja.',
+      ),
+    );
+  }
+
+  if (startDate && !validateDate(new Date(startDate))) {
+    return next(
+      new AppError(
+        400,
+        'La fecha de inicio de la baja no está en el formato correcto.',
+      ),
+    );
+  }
+
+  if (endDate && !validateDate(new Date(endDate))) {
+    return next(
+      new AppError(
+        400,
+        'La fecha de fin de la baja no está en el formato correcto.',
+      ),
+    );
+  }
+
+  next();
+});
