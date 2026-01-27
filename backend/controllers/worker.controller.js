@@ -1,4 +1,5 @@
 import * as workerService from '../services/worker.service.js';
+import * as sickLeaveService from '../services/sick-leave.service.js';
 import catchAsync from '../utils/catch-async.js';
 
 export const getAllWorkers = catchAsync(async (req, res, next) => {
@@ -39,6 +40,21 @@ export const getWorkerVacations = catchAsync(async (req, res, next) => {
     status: 'success',
     data: {
       vacations,
+    },
+  });
+});
+
+export const getWorkerSickLeaves = catchAsync(async (req, res, next) => {
+  const sickLeaves = await sickLeaveService.getWorkerSickLeaves(
+    req.params.id,
+    req.period,
+  );
+
+  // Send response
+  res.status(200).json({
+    status: 'success',
+    data: {
+      sickLeaves,
     },
   });
 });

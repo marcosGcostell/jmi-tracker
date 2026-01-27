@@ -11,6 +11,7 @@ import companyRouter from './routers/company.route.js';
 import workerRouter from './routers/worker.route.js';
 import workSiteRouter from './routers/work-site.route.js';
 import vacationRouter from './routers/vacation.route.js';
+import sickLeaveRouter from './routers/sick-leave.route.js';
 import globalErrorHandler from './controllers/error.controller.js';
 
 dotenv.config({ path: './config.env' });
@@ -56,6 +57,7 @@ app.use('/api/v1/companies', companyRouter);
 app.use('/api/v1/workers', workerRouter);
 app.use('/api/v1/worksites', workSiteRouter);
 app.use('/api/v1/vacations', vacationRouter);
+app.use('/api/v1/sickleaves', sickLeaveRouter);
 
 // ERROR MIDDLEWARE
 app.use(globalErrorHandler);

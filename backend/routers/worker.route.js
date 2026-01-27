@@ -23,6 +23,10 @@ router
   .route('/:id/vacations')
   .get(filterQuery, workerController.getWorkerVacations);
 
+router
+  .route('/:id/sick-leaves')
+  .get(filterQuery, workerController.getWorkerSickLeaves);
+
 // Routes for admins only
 router.use(authController.restrictTo('admin'));
 
