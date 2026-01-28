@@ -5,15 +5,20 @@ const pool = () => getPool();
 export const getAllResources = async onlyActive => {
   const { rows } = await pool().query(
     `
-    SELECT r.id, r.full_name, r.active,
+    SELECT r.id, r.name, r.resource_type, r.active,
       json_build_object(
         'id', c.id,
         'name', c.name
-      ) AS company
+      ) AS company,
+      json_build_object(
+        'id', g.id,
+        'name', g.name
+      ) AS category
     FROM resources r
     LEFT JOIN companies c ON r.company_id = c.id
+    LEFT JOIN categories g ON r.category_id = g.id
     WHERE ($1::BOOLEAN IS NULL OR r.active = $1)
-    ORDER BY c.is_main DESC NULLS LAST, c.name ASC, r.active DESC, r.full_name ASC
+    ORDER BY c.is_main DESC NULLS LAST, c.name ASC, r.active DESC, r.name ASC
     `,
     [onlyActive],
   );
@@ -24,13 +29,18 @@ export const getAllResources = async onlyActive => {
 export const getResource = async id => {
   const { rows } = await pool().query(
     `
-    SELECT r.id, r.full_name, r.user_id, r.active,
+    SELECT r.id, r.name, r.user_id, r.resource_type, r.active,
       json_build_object(
         'id', c.id,
         'name', c.name
-      ) AS company
+      ) AS company,
+      json_build_object(
+        'id', g.id,
+        'name', g.name
+      ) AS category
     FROM resources r
     LEFT JOIN companies c ON r.company_id = c.id
+    LEFT JOIN categories g ON r.category_id = g.id
     WHERE r.id = $1
     `,
     [id],
@@ -42,12 +52,17 @@ export const getResource = async id => {
 export const getCompanyResources = async (companyId, onlyActive) => {
   const { rows } = await pool().query(
     `
-    SELECT r.id, r.full_name, r.active, c.name AS company
+    SELECT r.id, r.name, r.resource_type, r.active, c.name AS company,
+      json_build_object(
+        'id', g.id,
+        'name', g.name
+      ) AS category
     FROM resources r
     INNER JOIN companies c ON r.company_id = c.id
+    LEFT JOIN categories g ON r.category_id = g.id
     WHERE r.company_id = $1
       AND ($2::BOOLEAN IS NULL OR r.active = $2)
-    ORDER BY r.active DESC, r.full_name ASC
+    ORDER BY r.active DESC, r.name ASC
     `,
     [companyId, onlyActive],
   );
@@ -62,9 +77,14 @@ export const getCompanyResourcesWithStatus = async (
 ) => {
   const { rows } = await pool().query(
     `
-    SELECT r.id, r.full_name, r.active, c.name AS company
+    SELECT r.id, r.name, r.resource_type, r.active, c.name AS company,
+      json_build_object(
+        'id', g.id,
+        'name', g.name
+      ) AS category
     FROM resources r
     INNER JOIN companies c ON r.company_id = c.id
+    LEFT JOIN categories g ON r.category_id = g.id
     LEFT JOIN vacations v
       ON v.resource_id = r.id
       AND $1 BETWEEN v.start_date AND v.end_date
@@ -73,7 +93,7 @@ export const getCompanyResourcesWithStatus = async (
       AND $1 BETWEEN l.start_date AND l.end_date
     WHERE r.company_id = $2
       AND ($3::BOOLEAN IS NULL OR r.active = $3)
-    ORDER BY r.active DESC, r.full_name ASC
+    ORDER BY r.active DESC, r.name ASC
     `,
     [date, companyId, onlyActive],
   );
@@ -81,64 +101,79 @@ export const getCompanyResourcesWithStatus = async (
   return rows;
 };
 
-export const findResource = async (companyId, fullName) => {
+export const findResource = async (companyId, name) => {
   const { rows } = await pool().query(
     `
-    SELECT r.id, r.full_name, r.active, c.name AS company
+    SELECT r.id, r.name, r.resource_type, r.active, c.name AS company,
+      json_build_object(
+        'id', g.id,
+        'name', g.name
+      ) AS category
     FROM resources r
     INNER JOIN companies c ON r.company_id = c.id
-    WHERE r.company_id = $1 AND r.full_name = $2
+    LEFT JOIN categories g ON r.category_id = g.id
+    WHERE r.company_id = $1 AND r.name = $2
     `,
-    [companyId, fullName],
+    [companyId, name],
   );
 
   return rows[0];
 };
 
 export const createResource = async data => {
-  const { companyId, fullName } = data;
+  const { companyId, categoryId, name, resourceType } = data;
 
   const { rows } = await pool().query(
     `
     WITH new_resource AS (
-      INSERT INTO resources (company_id, full_name)
-      VALUES ($1, $2)
-      RETURNING id, company_id, full_name, active
+      INSERT INTO resources (company_id, categoy_id, name, resource_type)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id, company_id, category_id, name, resource_type, active
     )
-    SELECT nr.id, nr.full_name, nr.active,
+    SELECT nr.id, nr.name, nr.resource_type, nr.active,
       json_build_object(
         'id', c.id,
         'name', c.name
-      ) AS company
+      ) AS company,
+      json_build_object(
+        'id', g.id,
+        'name', g.name
+      ) AS category
     FROM new_resource nr
     JOIN companies c ON c.id = nr.company_id
+    JOIN categories g ON g.id = nr.category_id
   `,
-    [companyId, fullName],
+    [companyId, categoryId, name, resourceType],
   );
 
   return rows[0];
 };
 
 export const updateResource = async (id, data) => {
-  const { fullName, userId, companyId, active } = data;
+  const { name, userId, companyId, categoryId, resourceType, active } = data;
 
   const { rows } = await pool().query(
     `
     WITH updated_resource AS (
       UPDATE resources
-      SET full_name = $1, user_id = $2, company_id=$3, active = $4
-      WHERE id = $5
-      RETURNING id, company_id, full_name, active
+      SET name = $1, user_id = $2, company_id=$3, category_id=$4, resource_type=$5, active = $6
+      WHERE id = $7
+      RETURNING id, company_id, category_id, name, resource_type, active
     )
-    SELECT ur.id, ur.full_name, ur.active,
+    SELECT ur.id, ur.name, ur.resource_type, ur.active,
       json_build_object(
         'id', c.id,
         'name', c.name
-      ) AS company
+      ) AS company,
+      json_build_object(
+        'id', g.id,
+        'name', g.name
+      ) AS category
     FROM updated_resource ur
     JOIN companies c ON c.id = ur.company_id
+    JOIN categories g ON g.id = nr.category_id
   `,
-    [fullName, userId, companyId, active, id],
+    [name, userId, companyId, categoryId, resourceType, active, id],
   );
 
   return rows[0];
@@ -151,15 +186,20 @@ export const disableResource = async id => {
       UPDATE resources
       SET active = false
       WHERE id = $1
-      RETURNING id, company_id, full_name, active
+      RETURNING id, company_id, category_id, name, resource_type, active
     )
-    SELECT ur.id, ur.full_name, ur.active,
+    SELECT ur.id, ur.name, ur.resource_type, ur.active,
       json_build_object(
         'id', c.id,
         'name', c.name
-      ) AS company
+      ) AS company,
+      json_build_object(
+        'id', g.id,
+        'name', g.name
+      ) AS category
     FROM updated_resource ur
     JOIN companies c ON c.id = ur.company_id
+    JOIN categories g ON g.id = nr.category_id
     `,
     [id],
   );

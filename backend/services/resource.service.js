@@ -8,7 +8,7 @@ export const getAllResources = async onlyActive => {
 };
 
 export const getResource = async id => {
-  const resource = await resource.getResource(id);
+  const resource = await Resource.getResource(id);
   if (!resource) {
     throw new AppError(400, 'El trabajador o equipo no existe.');
   }
