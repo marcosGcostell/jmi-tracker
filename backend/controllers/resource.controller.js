@@ -1,5 +1,4 @@
 import * as resourceService from '../services/resource.service.js';
-import * as sickLeaveService from '../services/sick-leave.service.js';
 import catchAsync from '../utils/catch-async.js';
 
 export const getAllResources = catchAsync(async (req, res, next) => {
@@ -45,7 +44,7 @@ export const getWorkerVacations = catchAsync(async (req, res, next) => {
 });
 
 export const getWorkerSickLeaves = catchAsync(async (req, res, next) => {
-  const sickLeaves = await sickLeaveService.getWorkerSickLeaves(
+  const sickLeaves = await resourceService.getWorkerSickLeaves(
     req.params.id,
     req.period,
   );

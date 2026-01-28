@@ -81,10 +81,10 @@ export const updateVacation = async (id, data) => {
 };
 
 export const deleteVacation = async id => {
-  const sickLeave = await Vacation.deleteVacation(id);
-  if (!sickLeave) {
+  const vacation = await Vacation.deleteVacation(id);
+  if (!vacation) {
     throw new AppError(400, 'No se encuentra este registro de vacaciones.');
   }
 
-  return sickLeave;
+  return vacation;
 };

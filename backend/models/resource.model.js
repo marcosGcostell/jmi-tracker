@@ -126,7 +126,7 @@ export const createResource = async data => {
   const { rows } = await pool().query(
     `
     WITH new_resource AS (
-      INSERT INTO resources (company_id, categoy_id, name, resource_type)
+      INSERT INTO resources (company_id, category_id, name, resource_type)
       VALUES ($1, $2, $3, $4)
       RETURNING id, company_id, category_id, name, resource_type, active
     )
@@ -171,7 +171,7 @@ export const updateResource = async (id, data) => {
       ) AS category
     FROM updated_resource ur
     JOIN companies c ON c.id = ur.company_id
-    JOIN categories g ON g.id = nr.category_id
+    JOIN categories g ON g.id = ur.category_id
   `,
     [name, userId, companyId, categoryId, resourceType, active, id],
   );
@@ -199,7 +199,7 @@ export const disableResource = async id => {
       ) AS category
     FROM updated_resource ur
     JOIN companies c ON c.id = ur.company_id
-    JOIN categories g ON g.id = nr.category_id
+    JOIN categories g ON g.id = ur.category_id
     `,
     [id],
   );

@@ -52,8 +52,8 @@ export const createResource = async data => {
   const resource = await Resource.createResource({
     companyId,
     categoryId,
-    name: fullName.trim(),
-    resourceType,
+    name: name.trim(),
+    resourceType: resourceType || 'person',
   });
 
   return resource;
@@ -72,15 +72,15 @@ export const updateResource = async (id, data, userRole) => {
   const newData = {
     name: name?.trim() || resource.name,
     userId: resource.user_id,
-    companyId: resource.company_id,
-    categoryId: categoryId || resource.category_id,
+    companyId: resource.company.id,
+    categoryId: categoryId || resource.category.id,
     resourceType: resourceType || resource.resource_type,
     active: resource.active,
   };
 
   if (userRole === 'admin') {
     newData.userId = userId ?? resource.user_id;
-    newData.companyId = companyId || resource.company_id;
+    newData.companyId = companyId || resource.company.id;
     newData.active = active ?? resource.active ?? true;
   }
 

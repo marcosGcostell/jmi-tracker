@@ -25,7 +25,7 @@ export const getCompanyResources = async (id, onlyActive, date) => {
     return Resource.getCompanyResourcesWithStatus(id, onlyActive, date);
   }
 
-  const resources = Resource.getCompanyResources(id, onlyActive);
+  const resources = await Resource.getCompanyResources(id, onlyActive);
 
   if (!resources.length) {
     throw new AppError(400, 'La empresa no tiene trabajadores.');

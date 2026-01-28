@@ -10,10 +10,10 @@ export const getAllSickLeaves = async (onlyActive, period) => {
   if (period) values.push(period.to, period.from);
 
   const sql = `
-    SELECT s.id, s.resource_id, w.full_name AS full_name, s.start_date, s.end_date
+    SELECT s.id, s.resource_id, r.name AS name, s.start_date, s.end_date
     FROM sick_leaves s
-    INNER JOIN resources w ON s.resource_id = w.id
-    WHERE ($1::BOOLEAN IS NULL OR w.active = $1)${periodCondition}
+    INNER JOIN resources r ON s.resource_id = r.id
+    WHERE ($1::BOOLEAN IS NULL OR r.active = $1)${periodCondition}
     ORDER BY s.start_date DESC
     `;
 
@@ -25,9 +25,9 @@ export const getAllSickLeaves = async (onlyActive, period) => {
 export const getSickLeave = async id => {
   const { rows } = await pool().query(
     `
-    SELECT s.id, s.resource_id, w.full_name AS full_name, s.start_date, s.end_date
+    SELECT s.id, s.resource_id, r.name AS name, s.start_date, s.end_date
     FROM sick_leaves s
-    INNER JOIN resources w ON s.resource_id = w.id
+    INNER JOIN resources r ON s.resource_id = r.id
     WHERE s.id = $1
     `,
     [id],
@@ -44,9 +44,9 @@ export const getWorkerSickLeaves = async (resourceId, period) => {
   if (period) values.push(period.to, period.from);
 
   const sql = `
-    SELECT s.id, s.resource_id, w.full_name AS full_name, s.start_date, s.end_date
+    SELECT s.id, s.resource_id, r.name AS name, s.start_date, s.end_date
     FROM sick_leaves s
-    INNER JOIN resources w ON s.resource_id = w.id
+    INNER JOIN resources r ON s.resource_id = r.id
     WHERE s.resource_id = $1${periodCondition}
     `;
 
@@ -95,15 +95,20 @@ export const updateSickLeave = async (id, data) => {
 };
 
 export const deleteSickLeave = async id => {
-  const { rows } = await pool().query(
-    `
+  const client = await pool().connect();
+  try {
+    const { rowCount, rows } = await client.query(
+      `
     DELETE 
     FROM sick_leaves
     WHERE id = $1
-    RETURNING id, resource_id, start_date, end_date
+    RETURNING id
   `,
-    [id],
-  );
+      [id],
+    );
 
-  return rows[0];
+    return rowCount ? { id: rows[0].id } : null;
+  } finally {
+    client.release();
+  }
 };
