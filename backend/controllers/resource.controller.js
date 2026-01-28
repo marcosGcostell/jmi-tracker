@@ -1,36 +1,35 @@
-import * as workerService from '../services/worker.service.js';
-import * as sickLeaveService from '../services/sick-leave.service.js';
+import * as resourceService from '../services/resource.service.js';
 import catchAsync from '../utils/catch-async.js';
 
-export const getAllWorkers = catchAsync(async (req, res, next) => {
+export const getAllResources = catchAsync(async (req, res, next) => {
   // Execute the query
-  const workers = await workerService.getAllWorkers(req.active);
+  const resources = await resourceService.getAllResources(req.active);
 
   // Send response
   res.status(200).json({
     status: 'success',
-    results: workers.length,
+    results: resources.length,
     data: {
-      workers,
+      resources,
     },
   });
 });
 
-export const getWorker = catchAsync(async (req, res, next) => {
+export const getResource = catchAsync(async (req, res, next) => {
   // Execute the query
-  const worker = await workerService.getWorker(req.params.id);
+  const resource = await resourceService.getResource(req.params.id);
 
   // Send response
   res.status(200).json({
     status: 'success',
     data: {
-      worker,
+      resource,
     },
   });
 });
 
 export const getWorkerVacations = catchAsync(async (req, res, next) => {
-  const vacations = await workerService.getWorkerVacations(
+  const vacations = await resourceService.getWorkerVacations(
     req.params.id,
     req.period,
   );
@@ -45,7 +44,7 @@ export const getWorkerVacations = catchAsync(async (req, res, next) => {
 });
 
 export const getWorkerSickLeaves = catchAsync(async (req, res, next) => {
-  const sickLeaves = await sickLeaveService.getWorkerSickLeaves(
+  const sickLeaves = await resourceService.getWorkerSickLeaves(
     req.params.id,
     req.period,
   );
@@ -59,22 +58,22 @@ export const getWorkerSickLeaves = catchAsync(async (req, res, next) => {
   });
 });
 
-export const createWorker = catchAsync(async (req, res, next) => {
+export const createResource = catchAsync(async (req, res, next) => {
   // Execute the query
-  const worker = await workerService.createWorker(req.body);
+  const resource = await resourceService.createResource(req.body);
 
   // Send response
   res.status(200).json({
     status: 'success',
     data: {
-      worker,
+      resource,
     },
   });
 });
 
-export const updateWorker = catchAsync(async (req, res, next) => {
+export const updateResource = catchAsync(async (req, res, next) => {
   // Execute the query
-  const worker = await workerService.updateWorker(
+  const resource = await resourceService.updateResource(
     req.params.id,
     req.body,
     req.user.role,
@@ -84,18 +83,18 @@ export const updateWorker = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: {
-      worker,
+      resource,
     },
   });
 });
 
-export const deleteWorker = catchAsync(async (req, res, next) => {
-  const worker = await workerService.deleteWorker(req.params.id);
+export const deleteResource = catchAsync(async (req, res, next) => {
+  const resource = await resourceService.deleteResource(req.params.id);
 
   res.status(200).json({
     status: 'success',
     data: {
-      worker,
+      resource,
     },
   });
 });

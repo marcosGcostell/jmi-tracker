@@ -1,5 +1,5 @@
 import * as Company from '../models/company.model.js';
-import * as Worker from '../models/worker.model.js';
+import * as Resource from '../models/resource.model.js';
 import AppError from '../utils/app-error.js';
 
 export const getAllCompanies = async onlyActive => {
@@ -15,23 +15,23 @@ export const getCompany = async id => {
   return company;
 };
 
-export const getCompanyWorkers = async (id, onlyActive, date) => {
+export const getCompanyResources = async (id, onlyActive, date) => {
   const company = await Company.getCompany(id);
   if (!company) {
     throw new AppError(400, 'La empresa no existe.');
   }
 
   if (company.is_main && date) {
-    return Worker.getCompanyWorkersWithStatus(id, onlyActive, date);
+    return Resource.getCompanyResourcesWithStatus(id, onlyActive, date);
   }
 
-  const workers = Worker.getCompanyWorkers(id, onlyActive);
+  const resources = await Resource.getCompanyResources(id, onlyActive);
 
-  if (!workers.length) {
+  if (!resources.length) {
     throw new AppError(400, 'La empresa no tiene trabajadores.');
   }
 
-  return workers;
+  return resources;
 };
 
 export const createCompany = async name => {
