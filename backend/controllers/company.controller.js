@@ -29,9 +29,9 @@ export const getCompany = catchAsync(async (req, res, next) => {
   });
 });
 
-export const getCompanyWorkers = catchAsync(async (req, res, next) => {
+export const getCompanyResources = catchAsync(async (req, res, next) => {
   // Execute the query
-  const workers = await companyService.getCompanyWorkers(
+  const resources = await companyService.getCompanyResources(
     req.params.id,
     req.active,
     req.date,
@@ -41,7 +41,7 @@ export const getCompanyWorkers = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: {
-      workers,
+      resources,
     },
   });
 });

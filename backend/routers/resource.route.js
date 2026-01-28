@@ -1,7 +1,7 @@
 import express from 'express';
 
 import * as authController from '../controllers/auth.controller.js';
-import * as workerController from '../controllers/worker.controller.js';
+import * as resourceController from '../controllers/resource.controller.js';
 import * as dataValidator from '../middleware/data-validators.js';
 import filterQuery from '../middleware/filter-query.js';
 
@@ -12,26 +12,29 @@ router.use(authController.protect);
 
 router
   .route('/')
-  .post(dataValidator.validateDataForWorker, workerController.createWorker);
+  .post(
+    dataValidator.validateDataForResource,
+    resourceController.createResource,
+  );
 
 router
   .route('/:id')
-  .get(workerController.getWorker)
-  .patch(workerController.updateWorker);
+  .get(resourceController.getResource)
+  .patch(resourceController.updateResource);
 
 router
   .route('/:id/vacations')
-  .get(filterQuery, workerController.getWorkerVacations);
+  .get(filterQuery, resourceController.getWorkerVacations);
 
 router
   .route('/:id/sick-leaves')
-  .get(filterQuery, workerController.getWorkerSickLeaves);
+  .get(filterQuery, resourceController.getWorkerSickLeaves);
 
 // Routes for admins only
 router.use(authController.restrictTo('admin'));
 
-router.route('/').get(filterQuery, workerController.getAllWorkers);
+router.route('/').get(filterQuery, resourceController.getAllResources);
 
-router.route('/:id').delete(workerController.deleteWorker);
+router.route('/:id').delete(resourceController.deleteResource);
 
 export default router;

@@ -21,8 +21,8 @@ router
   .patch(companyController.udpateCompany);
 
 router
-  .route('/:id/workers')
-  .get(filterQuery, companyController.getCompanyWorkers);
+  .route('/:id/resources')
+  .get(filterQuery, companyController.getCompanyResources);
 
 // Routes for admins only
 router.use(authController.restrictTo('admin'));

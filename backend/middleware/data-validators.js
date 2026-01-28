@@ -1,6 +1,7 @@
 import catchAsync from '../utils/catch-async.js';
 import AppError from '../utils/app-error.js';
 import { validateDate } from '../utils/validators.js';
+import { RESOURCE_TYPES } from '../utils/config.js';
 
 export const validateDataForCompany = catchAsync(async (req, res, next) => {
   const { name } = req.body;
@@ -13,17 +14,24 @@ export const validateDataForCompany = catchAsync(async (req, res, next) => {
   next();
 });
 
-export const validateDataForWorker = catchAsync(async (req, res, next) => {
-  const { companyId, fullName } = req.body;
+export const validateDataForResource = catchAsync(async (req, res, next) => {
+  const { companyId, categoryId, name, resourceType } = req.body;
 
-  if (!companyId || !fullName?.trim()) {
+  if (!companyId || !categoryId || !name?.trim()) {
     return next(
       new AppError(
         400,
-        'Para crear un trabajador se necesita un nombre y seleccionar la empresa a la que pertenece.',
+        'Para crear un recurso se necesita un nombre y seleccionar la empresa y la categoría a la que pertenece.',
       ),
     );
   }
+
+  if (resourceType && !RESOURCE_TYPES.includes(resourceType))
+    throw new AppError(
+      400,
+      'Sólo se puede crear un recurso de los tipos: persona, equipo o vehículo.',
+    );
+
   next();
 });
 
@@ -52,9 +60,9 @@ export const validateDataForWorkSites = catchAsync(async (req, res, next) => {
 });
 
 export const validateDataForVacations = catchAsync(async (req, res, next) => {
-  const { workerId, startDate, endDate } = req.body;
+  const { resourceId, startDate, endDate } = req.body;
 
-  if (!workerId || !startDate || !endDate) {
+  if (!resourceId || !startDate || !endDate) {
     return next(
       new AppError(
         400,
@@ -85,9 +93,9 @@ export const validateDataForVacations = catchAsync(async (req, res, next) => {
 });
 
 export const validateDataForSickLeaves = catchAsync(async (req, res, next) => {
-  const { workerId, startDate, endDate } = req.body;
+  const { resourceId, startDate, endDate } = req.body;
 
-  if (!workerId || !startDate) {
+  if (!resourceId || !startDate) {
     return next(
       new AppError(
         400,

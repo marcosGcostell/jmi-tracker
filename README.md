@@ -1,6 +1,6 @@
 # JMI Obras Tracker
 
-This repo contains a progressive web application to manage the **_time tracking_** of workers on construction sites.
+This repo contains a progressive web application to manage the **_time tracking_** of workers and equipment on construction sites.
 
 ## KuantiK Software
 

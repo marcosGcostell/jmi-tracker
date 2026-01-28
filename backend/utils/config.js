@@ -1,5 +1,6 @@
 // App config
 export const APP_LOGO = 'https://jmiobras.com/assets/img/logo_standard.svg';
+export const RESOURCE_TYPES = ['person', 'machine', 'vehicle'];
 
 // Security parameters
 export const ENCRYPT_STRENGTH = 12;

@@ -1,5 +1,5 @@
 import * as SickLeave from '../models/sick-leave.model.js';
-import * as Worker from '../models/worker.model.js';
+import * as Resource from '../models/resource.model.js';
 import AppError from '../utils/app-error.js';
 import { validateDate } from '../utils/validators.js';
 
@@ -17,12 +17,12 @@ export const getSickLeave = async id => {
 };
 
 export const createSickLeave = async data => {
-  const worker = await Worker.getWorker(data.workerId);
-  if (!worker?.id) {
+  const resource = await Resource.getResource(data.resourceId);
+  if (!resource?.id) {
     throw new AppError(400, 'El trabajador no existe.');
   }
   const newData = {
-    workerId: data.workerId,
+    resourceId: data.resourceId,
     startDate: new Date(data.startDate),
     endDate: data.endDate ? new Date(data.endDate) : null,
   };
@@ -48,7 +48,7 @@ export const updateSickLeave = async (id, data) => {
     throw new AppError(400, 'No se encuentra la baja en el registro.');
   }
 
-  const { workerId } = data;
+  const { resourceId } = data;
   const startDate = data.startDate ? new Date(data.startDate) : null;
   const endDate = data.endDate ? new Date(data.endDate) : null;
 
@@ -60,7 +60,7 @@ export const updateSickLeave = async (id, data) => {
   }
 
   const newData = {
-    workerId: workerId || sickLeave.worker_id,
+    resourceId: resourceId || sickLeave.resource_id,
     startDate: startDate || sickLeave.start_date,
     endDate: endDate || sickLeave.end_date,
   };

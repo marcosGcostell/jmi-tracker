@@ -163,7 +163,7 @@ CREATE TABLE sick_leaves (
 );
 
 -- INDEXES
--- Search for workers and dates
+-- Search for resources and dates
 CREATE INDEX idx_time_entries_resource_time ON time_entries(resource_id, start_time, end_time);
 
 -- Search for work sites
