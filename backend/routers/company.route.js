@@ -24,6 +24,10 @@ router
   .route('/:id/resources')
   .get(filterQuery, companyController.getCompanyResources);
 
+router
+  .route('/:id/categories')
+  .get(filterQuery, companyController.getCompanyCategories);
+
 // Routes for admins only
 router.use(authController.restrictTo('admin'));
 

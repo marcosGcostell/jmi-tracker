@@ -46,6 +46,22 @@ export const getCompanyResources = catchAsync(async (req, res, next) => {
   });
 });
 
+export const getCompanyCategories = catchAsync(async (req, res, next) => {
+  // Execute the query
+  const categories = await companyService.getCompanyCategories(
+    req.params.id,
+    req.extended,
+  );
+
+  // Send response
+  res.status(200).json({
+    status: 'success',
+    data: {
+      categories,
+    },
+  });
+});
+
 export const createCompany = catchAsync(async (req, res, next) => {
   // Execute the query
   const company = await companyService.createCompany(req.body?.name);

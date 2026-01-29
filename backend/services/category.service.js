@@ -2,7 +2,7 @@ import * as Category from '../models/category.model.js';
 import * as Resource from '../models/resource.model.js';
 import AppError from '../utils/app-error.js';
 
-export const getAllcategories = async () => {
+export const getAllCategories = async () => {
   return Category.getAllCategories();
 };
 
@@ -42,7 +42,9 @@ export const updateCategory = async (id, name) => {
     throw new AppError(400, 'La categoría no existe.');
   }
 
-  return Category.updateCategory(id, name.trim());
+  const newName = name?.trim() || category.name;
+
+  return Category.updateCategory(id, newName);
 };
 
 export const deleteCategory = async id => {
