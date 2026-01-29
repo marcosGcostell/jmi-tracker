@@ -2,6 +2,7 @@ import express from 'express';
 
 import * as authController from '../controllers/auth.controller.js';
 import * as workSiteController from '../controllers/work-site.controller.js';
+import * as workRuleController from '../controllers/work-rule.controller.js';
 import {
   checkRecordFields,
   checkFieldsForUpdate,

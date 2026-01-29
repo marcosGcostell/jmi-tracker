@@ -1,9 +1,9 @@
 import qs from 'qs';
 
 import catchAsync from '../utils/catch-async.js';
-import parseBooleanQuery from '../utils/parse-boolean-query.js';
-import { parseSort } from '../utils/parse-sort.js';
-import { validateDate } from '../utils/validators.js';
+import parseBooleanQuery from '../domain/helpers/parse-boolean-query.js';
+import { parseSort } from '../domain/helpers/parse-sort.js';
+import validateDate from '../domain/validators/validate-date.js';
 
 const filterQuery = catchAsync(async (req, res, next) => {
   const { active, date, from, to, sort, extended } = { ...qs.parse(req.query) };

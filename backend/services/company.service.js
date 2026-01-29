@@ -1,6 +1,7 @@
 import * as Company from '../models/company.model.js';
 import * as Resource from '../models/resource.model.js';
 import * as Category from '../models/category.model.js';
+import companyExists from '../domain/assertions/companyExists.js';
 import AppError from '../utils/app-error.js';
 
 export const getAllCompanies = async onlyActive => {
@@ -8,19 +9,11 @@ export const getAllCompanies = async onlyActive => {
 };
 
 export const getCompany = async id => {
-  const company = await Company.getCompany(id);
-  if (!company) {
-    throw new AppError(400, 'La empresa no existe.');
-  }
-
-  return company;
+  return companyExists(id);
 };
 
 export const getCompanyResources = async (id, onlyActive, date) => {
-  const company = await Company.getCompany(id);
-  if (!company) {
-    throw new AppError(400, 'La empresa no existe.');
-  }
+  const company = await companyExists(id);
 
   if (company.is_main && date) {
     return Resource.getCompanyResourcesWithStatus(id, onlyActive, date);
@@ -65,10 +58,7 @@ export const createCompany = async name => {
 export const updateCompany = async (id, data, isAdmin) => {
   const { name, isMain, active } = data;
 
-  const company = await Company.getCompany(id);
-  if (!company) {
-    throw new AppError(400, 'La empresa no existe.');
-  }
+  const company = await companyExists(id);
 
   if (company.is_main && !isAdmin) {
     throw new AppError(
@@ -87,9 +77,9 @@ export const updateCompany = async (id, data, isAdmin) => {
 };
 
 export const deleteCompany = async id => {
-  const company = await Company.getCompany(id);
-  if (!company || !company?.active)
-    throw new AppError(400, 'La empresa no existe o ya está deshabilitada.');
+  const company = await companyExists(id);
+  if (!company?.active)
+    throw new AppError(400, 'La empresa ya está deshabilitada.');
 
   if (company.is_main)
     throw new AppError(400, 'No se puede deshabilitar la empresa principal.');

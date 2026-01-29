@@ -1,6 +1,7 @@
 import * as User from '../models/user.model.js';
 import * as WorkSite from '../models/work-site.model.js';
 import * as authService from './auth.service.js';
+import userExists from '../domain/assertions/userExists.js';
 import AppError from '../utils/app-error.js';
 
 export const getAllUsers = async () => {
@@ -8,13 +9,7 @@ export const getAllUsers = async () => {
 };
 
 export const getUser = async id => {
-  const { email, fullName, password, role } = data;
-
-  if (!id) {
-    throw new AppError(409, 'El usuario no exite.');
-  }
-
-  return User.getUser(id);
+  return userExists(id);
 };
 
 export const findMyWorkSites = async (userId, onlyActive) => {
@@ -51,12 +46,7 @@ export const createUser = async data => {
 export const updateUser = async (id, data) => {
   const { email, fullName, role, active } = data;
 
-  const user = await User.getUser(id);
-  if (!user)
-    throw new AppError(
-      401,
-      'No has iniciado sesión! Por favor, inicia sesión para obtener acceso.',
-    );
+  const user = await userExists(id);
 
   const newData = {
     email: email?.toLowerCase().trim() || user.email,
@@ -69,11 +59,11 @@ export const updateUser = async (id, data) => {
 };
 
 export const deleteUser = async id => {
-  const user = await User.getUser(id);
-  if (!user || !user?.active)
+  const user = await userExists(id);
+  if (!user?.active)
     throw new AppError(
       400,
-      'No existe ningún usuario registrado con este email o ya está deshabilitado',
+      'El usuario registrado con este email ya está deshabilitado',
     );
 
   return User.disableUser(user.id);

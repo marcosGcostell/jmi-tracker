@@ -34,7 +34,7 @@ export const getSchedule = catchAsync(async (req, res, next) => {
 
 export const getCompanySchedules = catchAsync(async (req, res, next) => {
   // Execute the query
-  const schedule = await scheduleService.getCompanySchedules(
+  const schedules = await scheduleService.getCompanySchedules(
     req.params.id,
     req.period,
   );
@@ -42,9 +42,9 @@ export const getCompanySchedules = catchAsync(async (req, res, next) => {
   // Send response
   res.status(200).json({
     status: 'success',
-    results: schedule.length,
+    results: schedules.length,
     data: {
-      schedule,
+      schedules,
     },
   });
 });

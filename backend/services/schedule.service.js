@@ -1,40 +1,18 @@
-import * as Schedule from '../models/schedules.model.js';
-import * as Company from '../models/company.model.js';
+import * as Schedule from '../models/schedule.model.js';
+import scheduleExists from '../domain/assertions/scheduleExists.js';
+import companyExists from '../domain/assertions/companyExists.js';
 import AppError from '../utils/app-error.js';
-
-const _checkCompany = async companyId => {
-  const company = await Company.getCompany(companyId);
-  if (!company?.id) {
-    throw new AppError(400, 'La empresa no existe.');
-  }
-  if (!company.is_main) {
-    throw new AppError(
-      400,
-      'Solo la empresa principal puede tener horarios predeterminados.',
-    );
-  }
-
-  return company;
-};
 
 export const getAllSchedules = async (onlyActive, period) => {
   return Schedule.getAllSchedules(onlyActive, period);
 };
 
 export const getSchedule = async id => {
-  const schedule = await Schedule.getSchedule(id);
-  if (!schedule?.id) {
-    throw new AppError(
-      400,
-      'No se encuentra el horario predeterminado para esta empresa.',
-    );
-  }
-
-  return schedule;
+  return scheduleExists(id);
 };
 
 export const getCompanySchedules = async (companyId, period) => {
-  await _checkCompany(companyId);
+  await companyExists(companyId, true);
 
   return Schedule.getCompanySchedules(companyId, period);
 };
@@ -43,7 +21,7 @@ export const createSchedule = async data => {
   const { companyId, startTime, endTime, dayCorrection, validFrom, validTo } =
     data;
 
-  await _checkCompany(companyId);
+  await companyExists(companyId, true);
 
   const newData = {
     companyId,
@@ -73,13 +51,10 @@ export const createSchedule = async data => {
 };
 
 export const updateSchedule = async (id, data) => {
-  const schedule = await Schedule.getSchedule(id);
-  if (!schedule) {
-    throw new AppError(400, 'No se encuentra este registro de horario.');
-  }
+  const schedule = await scheduleExists(id);
 
   const { companyId, startTime, endTime, dayCorrection } = data;
-  if (companyId) await _checkCompany(companyId);
+  if (companyId) await companyExists(companyId, true);
 
   const validFrom = data.validFrom ? new Date(data.validFrom) : null;
   const validTo = data.validTo ? new Date(data.validTo) : null;

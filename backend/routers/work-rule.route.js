@@ -1,32 +1,27 @@
 import express from 'express';
 
 import * as authController from '../controllers/auth.controller.js';
-import * as scheduleController from '../controllers/schedule.controller.js';
+import * as workRuleController from '../controllers/work-rule.controller.js';
 import {
   checkRecordFields,
   checkFieldsForUpdate,
 } from '../middleware/data-validators.js';
 import filterQuery from '../middleware/filter-query.js';
+import filterWorkRuleQuery from '../middleware/filter-work-rule-query.js';
 
 const router = express.Router();
 const recordFields = [
+  {
+    name: 'workSiteId',
+    type: 'id',
+    required: true,
+    message: 'Obra',
+  },
   {
     name: 'companyId',
     type: 'id',
     required: true,
     message: 'Empresa',
-  },
-  {
-    name: 'startTime',
-    type: 'time',
-    required: true,
-    message: 'Hora de inicio de jornada',
-  },
-  {
-    name: 'endTime',
-    type: 'time',
-    required: true,
-    message: 'Hora de final de jornada',
   },
   {
     name: 'dayCorrection',
@@ -38,32 +33,37 @@ const recordFields = [
     name: 'validFrom',
     type: 'date',
     required: true,
-    message: 'Horario válido desde',
+    message: 'Regla válida desde',
   },
   {
     name: 'validTo',
     type: 'date',
     required: false,
-    message: 'Horario válido hasta',
+    message: 'Regla válida hasta',
   },
 ];
 
 // Routes for logged in users
 router.use(authController.protect);
 
-router.route('/:id').get(scheduleController.getSchedule);
+router
+  .route('/resolve')
+  .get(filterQuery, filterWorkRuleQuery, workRuleController.resolveGetWorkRule);
+
+router.route('/:id').get(workRuleController.getWorkRule);
+
+router
+  .route('/:id')
+  .patch(checkFieldsForUpdate(recordFields), workRuleController.updateWorkRule);
 
 // Routes for admins only
 router.use(authController.restrictTo('admin'));
 
 router
   .route('/')
-  .get(filterQuery, scheduleController.getAllSchedules)
-  .post(checkRecordFields(recordFields), scheduleController.createSchedule);
+  .get(filterQuery, workRuleController.getAllWorkRules)
+  .post(checkRecordFields(recordFields), workRuleController.createWorkRule);
 
-router
-  .route('/:id')
-  .patch(checkFieldsForUpdate(recordFields), scheduleController.updateSchedule)
-  .delete(scheduleController.deleteSchedule);
+router.route('/:id').delete(workRuleController.deleteWorkRule);
 
 export default router;

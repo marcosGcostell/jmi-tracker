@@ -1,4 +1,5 @@
 import * as WorkSite from '../models/work-site.model.js';
+import workSiteExists from '../domain/assertions/workSiteExists.js';
 import AppError from '../utils/app-error.js';
 
 export const getAllWorkSites = async onlyActive => {
@@ -6,12 +7,7 @@ export const getAllWorkSites = async onlyActive => {
 };
 
 export const getWorkSite = async id => {
-  const workSite = await WorkSite.getWorkSite(id);
-  if (!workSite) {
-    throw new AppError(400, 'La obra no existe.');
-  }
-
-  return workSite;
+  return workSiteExists(id);
 };
 
 export const createWorkSite = async data => {
@@ -47,10 +43,7 @@ export const updateWorkSite = async (id, data) => {
   const startDate = data.startDate ? new Date(data.startDate) : null;
   const endDate = data.endDate ? new Date(data.endDate) : null;
 
-  const workSite = await WorkSite.getWorkSite(id);
-  if (!workSite) {
-    throw new AppError(400, 'La obra no existe.');
-  }
+  const workSite = await workSiteExists(id);
 
   const newData = {
     name: name?.trim() || workSite.name,

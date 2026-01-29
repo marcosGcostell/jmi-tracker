@@ -1,6 +1,7 @@
 import * as Resource from '../models/resource.model.js';
 import * as Vacation from '../models/vacation.model.js';
 import * as SickLeave from '../models/sick-leave.model.js';
+import resourceExists from '../domain/assertions/resourceExists.js';
 import AppError from '../utils/app-error.js';
 
 export const getAllResources = async onlyActive => {
@@ -8,12 +9,7 @@ export const getAllResources = async onlyActive => {
 };
 
 export const getResource = async id => {
-  const resource = await Resource.getResource(id);
-  if (!resource) {
-    throw new AppError(400, 'El trabajador o equipo no existe.');
-  }
-
-  return resource;
+  return resourceExists(id);
 };
 
 export const getWorkerVacations = async (id, period) => {
@@ -63,10 +59,7 @@ export const updateResource = async (id, data, userRole) => {
   console.log(id, data, userRole);
   const { name, userId, companyId, categoryId, resourceType, active } = data;
 
-  const resource = await Resource.getResource(id);
-  if (!resource) {
-    throw new AppError(400, 'El trabajador o equipo no existe.');
-  }
+  const resource = await resourceExists(id);
 
   // Users can only change the name, type and categoy fields
   const newData = {
@@ -88,12 +81,9 @@ export const updateResource = async (id, data, userRole) => {
 };
 
 export const deleteResource = async id => {
-  const resource = await Resource.getResource(id);
-  if (!resource || !resource?.active)
-    throw new AppError(
-      400,
-      'El trabajador o equipo no existe o ya está deshabilitado.',
-    );
+  const resource = await resourceExists(id);
+  if (!resource?.active)
+    throw new AppError(400, 'El trabajador o equipo ya está deshabilitado.');
 
   return Resource.disableResource(resource.id);
 };

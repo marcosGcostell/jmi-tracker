@@ -1,5 +1,5 @@
 import * as authService from '../services/auth.service.js';
-import sendAuthResponse from '../utils/sendAuthResponse.js';
+import sendAuthResponse from '../domain/helpers/sendAuthResponse.js';
 import catchAsync from '../utils/catch-async.js';
 
 export const login = catchAsync(async (req, res, next) => {

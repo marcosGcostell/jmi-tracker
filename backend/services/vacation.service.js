@@ -1,4 +1,6 @@
 import * as Vacation from '../models/vacation.model.js';
+import vacationExists from '../domain/assertions/vacationExists.js';
+import resourceExists from '../domain/assertions/resourceExists.js';
 import * as Resource from '../models/resource.model.js';
 import AppError from '../utils/app-error.js';
 
@@ -7,19 +9,12 @@ export const getAllVacations = async (onlyActive, period) => {
 };
 
 export const getVacation = async id => {
-  const vacation = await Vacation.getVacation(id);
-  if (!vacation?.id) {
-    throw new AppError(400, 'No se encuentra el registro de vacaciones.');
-  }
-
-  return vacation;
+  return vacationExists(id);
 };
 
 export const createVacation = async data => {
-  const resource = await Resource.getResource(data.resourceId);
-  if (!resource?.id) {
-    throw new AppError(400, 'El trabajador no existe.');
-  }
+  await resourceExists(data.resourceId);
+
   const newData = {
     resourceId: data.resourceId,
     startDate: new Date(data.startDate),
@@ -45,10 +40,7 @@ export const createVacation = async data => {
 };
 
 export const updateVacation = async (id, data) => {
-  const vacation = await Vacation.getVacation(id);
-  if (!vacation) {
-    throw new AppError(400, 'No se encuentra este registro de vacaciones.');
-  }
+  const vacation = await vacationExists(id);
 
   const { resourceId } = data;
   const startDate = data.startDate ? new Date(data.startDate) : null;
