@@ -1,5 +1,6 @@
 import * as Category from '../models/category.model.js';
 import * as Resource from '../models/resource.model.js';
+import categoryExists from '../domain/assertions/categoryExists.js';
 import AppError from '../utils/app-error.js';
 
 export const getAllCategories = async () => {
@@ -7,12 +8,7 @@ export const getAllCategories = async () => {
 };
 
 export const getCategory = async id => {
-  const category = await Category.getCategory(id);
-  if (!category) {
-    throw new AppError(400, 'El trabajador o equipo no existe.');
-  }
-
-  return category;
+  return categoryExists(id);
 };
 
 export const createCategory = async data => {
@@ -37,19 +33,14 @@ export const createCategory = async data => {
 };
 
 export const updateCategory = async (id, name) => {
-  const category = await Category.getCategory(id);
-  if (!category) {
-    throw new AppError(400, 'La categoría no existe.');
-  }
-
+  const category = await categoryExists(id);
   const newName = name?.trim() || category.name;
 
   return Category.updateCategory(id, newName);
 };
 
 export const deleteCategory = async id => {
-  const category = await Category.getCategory(id);
-  if (!category) throw new AppError(400, 'La categoría no existe.');
+  const category = await categoryExists(id);
 
   const usedInResources = await Resource.getResourcesWithCategory(id);
   if (!usedInResources.length)

@@ -1,5 +1,6 @@
 import * as SickLeave from '../models/sick-leave.model.js';
-import * as Resource from '../models/resource.model.js';
+import sickLeaveExists from '../domain/assertions/sickLeaveExists.js';
+import resourceExists from '../domain/assertions/resourceExists.js';
 import AppError from '../utils/app-error.js';
 
 export const getAllSickLeaves = async (onlyActive, period) => {
@@ -7,19 +8,12 @@ export const getAllSickLeaves = async (onlyActive, period) => {
 };
 
 export const getSickLeave = async id => {
-  const sickLeave = await SickLeave.getSickLeave(id);
-  if (!sickLeave?.id) {
-    throw new AppError(400, 'No se encuentra la baja en el registro.');
-  }
-
-  return sickLeave;
+  return sickLeaveExists(id);
 };
 
 export const createSickLeave = async data => {
-  const resource = await Resource.getResource(data.resourceId);
-  if (!resource?.id) {
-    throw new AppError(400, 'El trabajador no existe.');
-  }
+  const resource = await resourceExists(data.resourceId);
+
   const newData = {
     resourceId: data.resourceId,
     startDate: new Date(data.startDate),
@@ -42,10 +36,7 @@ export const createSickLeave = async data => {
 };
 
 export const updateSickLeave = async (id, data) => {
-  const sickLeave = await SickLeave.getSickLeave(id);
-  if (!sickLeave) {
-    throw new AppError(400, 'No se encuentra la baja en el registro.');
-  }
+  const sickLeave = await sickLeaveExists(id);
 
   const { resourceId } = data;
   const startDate = data.startDate ? new Date(data.startDate) : null;

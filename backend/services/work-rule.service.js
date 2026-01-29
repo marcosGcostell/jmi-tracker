@@ -1,6 +1,7 @@
 import * as WorkRule from '../models/work-rule.model.js';
-import { getCompany } from './company.service.js';
-import { getWorkSite } from './work-site.service.js';
+import workRuleExists from '../domain/assertions/workRuleExists.js';
+import companyExists from '../domain/assertions/companyExists.js';
+import workSiteExists from '../domain/assertions/workSiteExists.js';
 import AppError from '../utils/app-error.js';
 
 export const getAllWorkRules = async (onlyActive, period) => {
@@ -8,16 +9,11 @@ export const getAllWorkRules = async (onlyActive, period) => {
 };
 
 export const getWorkRule = async id => {
-  const workRule = await WorkRule.getWorkRule(id);
-  if (!workRule?.id) {
-    throw new AppError(400, 'No se encuentra la regla de configuración.');
-  }
-
-  return workRule;
+  return workRuleExists(id);
 };
 
 export const getWorkSiteWorkRules = async (workSiteId, period) => {
-  await getWorkSite(workSiteId);
+  await workSiteExists(workSiteId);
 
   return WorkRule.getWorkSiteWorkRules(workSiteId, period);
 };
@@ -27,8 +23,8 @@ export const getWorkSiteAndCompanyWorkRules = async (
   companyId,
   period,
 ) => {
-  await getWorkSite(workSiteId);
-  await getCompany(companyId);
+  await workSiteExists(workSiteId);
+  await companyExists(companyId);
 
   return WorkRule.getWorkSiteAndCompanyWorkRules(workSiteId, companyId, period);
 };
@@ -36,8 +32,8 @@ export const getWorkSiteAndCompanyWorkRules = async (
 export const createWorkRule = async data => {
   const { workSiteId, companyId, dayCorrection, validFrom, validTo } = data;
 
-  await getWorkSite(workSiteId);
-  await getCompany(companyId);
+  await workSiteExists(workSiteId);
+  await companyExists(companyId);
 
   const newData = {
     workSiteId,
@@ -66,11 +62,11 @@ export const createWorkRule = async data => {
 };
 
 export const updateWorkRule = async (id, data) => {
-  const workRule = await getWorkRule(id);
+  const workRule = await workRuleExists(id);
 
   const { workSiteId, companyId, dayCorrection } = data;
-  if (workSiteId) await getWorkSite(workSiteId);
-  if (companyId) await getCompany(companyId);
+  if (workSiteId) await workSiteExists(workSiteId);
+  if (companyId) await companyExists(companyId);
 
   const validFrom = data.validFrom ? new Date(data.validFrom) : null;
   const validTo = data.validTo ? new Date(data.validTo) : null;
