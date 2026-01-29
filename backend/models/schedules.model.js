@@ -46,7 +46,7 @@ export const getSchedule = async id => {
 
 export const getCompanySchedules = async (companyId, period) => {
   const periodCondition = period
-    ? ` AND s.start_time <= $2 AND (s.end_time IS NULL OR s.end_time >= $3)`
+    ? ` AND s.valid_from <= $2 AND (s.valid_to IS NULL OR s.valid_to >= $3)`
     : '';
   const values = [companyId];
   if (period) values.push(period.to, period.from);
