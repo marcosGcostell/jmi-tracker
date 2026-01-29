@@ -11,7 +11,7 @@ import filterQuery from '../middleware/filter-query.js';
 const router = express.Router();
 const recordFields = [
   { name: 'name', type: 'text', required: true, message: 'Nombre' },
-  { code: 'name', type: 'text', required: true, message: 'Código' },
+  { name: 'code', type: 'text', required: true, message: 'Código' },
   {
     name: 'startDate',
     type: 'date',
