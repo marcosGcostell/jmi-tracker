@@ -38,7 +38,7 @@ CREATE TABLE resources (
 
   company_id UUID NOT NULL REFERENCES companies(id),
   user_id UUID UNIQUE REFERENCES users(id),
-  category_id UUID NOT NULL REFERENCES categories(id),
+  category_id UUID NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
 
   name TEXT NOT NULL,
   resource_type TEXT NOT NULL DEFAULT 'person',
@@ -97,11 +97,28 @@ CREATE TABLE work_site_company_rules (
     EXCLUDE USING gist (
       work_site_id WITH =,
       company_id   WITH =,
-      daterange(
-        valid_from,
-        COALESCE(valid_to, 'infinity'::date),
-        '[)'
-      ) WITH &&
+      daterange(valid_from, COALESCE(valid_to, 'infinity'::date), '[)') WITH &&
+    )
+);
+
+CREATE TABLE main_company_schedules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  company_id UUID NOT NULL REFERENCES companies(id),
+
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  day_correction_minutes INTEGER NOT NULL DEFAULT 0,
+
+  valid_from DATE NOT NULL,
+  valid_to DATE,
+
+  CHECK (valid_to IS NULL OR valid_to >= valid_from),
+
+  CONSTRAINT no_overlapping_schedules
+    EXCLUDE USING gist (
+      company_id WITH =,
+      daterange(valid_from, COALESCE(valid_to, 'infinity'), '[)') WITH &&
     )
 );
 
@@ -113,6 +130,8 @@ CREATE TABLE time_entries (
 
   start_time TIMESTAMPTZ NOT NULL,
   end_time TIMESTAMPTZ,
+  work_day_minutes INTEGER,
+  comment TEXT,
 
   created_by UUID NOT NULL REFERENCES users(id),
   created_at TIMESTAMPTZ DEFAULT now(),
