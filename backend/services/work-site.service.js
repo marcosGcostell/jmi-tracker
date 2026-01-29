@@ -53,13 +53,6 @@ export const updateWorkSite = async (id, data) => {
     throw new AppError(400, 'La obra no existe.');
   }
 
-  if (
-    (startDate && !validateDate(startDate)) ||
-    (endDate && !validateDate(endDate))
-  ) {
-    throw new AppError(400, 'Las fechas no están en el formato correcto.');
-  }
-
   const newData = {
     name: name?.trim() || workSite.name,
     code: code?.trim() || workSite.code,

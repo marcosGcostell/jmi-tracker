@@ -52,13 +52,6 @@ export const updateSickLeave = async (id, data) => {
   const startDate = data.startDate ? new Date(data.startDate) : null;
   const endDate = data.endDate ? new Date(data.endDate) : null;
 
-  if (
-    (startDate && !validateDate(startDate)) ||
-    (endDate && !validateDate(endDate))
-  ) {
-    throw new AppError(400, 'Las fechas no están en el formato correcto.');
-  }
-
   const newData = {
     resourceId: resourceId || sickLeave.resource_id,
     startDate: startDate || sickLeave.start_date,

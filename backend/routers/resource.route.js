@@ -2,25 +2,52 @@ import express from 'express';
 
 import * as authController from '../controllers/auth.controller.js';
 import * as resourceController from '../controllers/resource.controller.js';
-import * as dataValidator from '../middleware/data-validators.js';
+import {
+  checkRecordFields,
+  checkFieldsForUpdate,
+} from '../middleware/data-validators.js';
 import filterQuery from '../middleware/filter-query.js';
 
 const router = express.Router();
+const recordFields = [
+  { name: 'name', type: 'text', required: true, message: 'Nombre' },
+  {
+    name: 'companyId',
+    type: 'id',
+    required: true,
+    message: 'Empresa a la que pertenece',
+  },
+  {
+    name: 'categoryId',
+    type: 'id',
+    required: true,
+    message: 'Categoría',
+  },
+  {
+    name: 'userId',
+    type: 'id',
+    required: false,
+    message: 'Usuario referenciado',
+  },
+  {
+    name: 'resourceType',
+    type: 'resource',
+    required: false,
+    message: 'Tipo de recurso',
+  },
+];
 
 // Routes for logged in users
 router.use(authController.protect);
 
 router
   .route('/')
-  .post(
-    dataValidator.validateDataForResource,
-    resourceController.createResource,
-  );
+  .post(checkRecordFields(recordFields), resourceController.createResource);
 
 router
   .route('/:id')
   .get(resourceController.getResource)
-  .patch(resourceController.updateResource);
+  .patch(checkFieldsForUpdate(recordFields), resourceController.updateResource);
 
 router
   .route('/:id/vacations')
