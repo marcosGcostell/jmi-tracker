@@ -1,5 +1,6 @@
 import * as Company from '../models/company.model.js';
 import * as Resource from '../models/resource.model.js';
+import * as Category from '../models/category.model.js';
 import AppError from '../utils/app-error.js';
 
 export const getAllCompanies = async onlyActive => {
@@ -32,6 +33,19 @@ export const getCompanyResources = async (id, onlyActive, date) => {
   }
 
   return resources;
+};
+
+export const getCompanyCategories = async (id, plusGlobal) => {
+  const categories = await Category.getCompanyCategories(id, plusGlobal);
+
+  if (!categories) {
+    throw new AppError(
+      400,
+      'Esta empresa no tiene ninguna categoría registrada.',
+    );
+  }
+
+  return categories;
 };
 
 export const createCompany = async name => {

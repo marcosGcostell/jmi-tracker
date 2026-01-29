@@ -120,6 +120,21 @@ export const findResource = async (companyId, name) => {
   return rows[0];
 };
 
+export const getResourcesWithCategory = async categoryId => {
+  const { rows } = await pool().query(
+    `
+    SELECT id
+    FROM resources
+    INNER JOIN companies c ON r.company_id = c.id
+    LEFT JOIN categories g ON r.category_id = g.id
+    WHERE category_id = $1
+    `,
+    [categoryId],
+  );
+
+  return rows;
+};
+
 export const createResource = async data => {
   const { companyId, categoryId, name, resourceType } = data;
 

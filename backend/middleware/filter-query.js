@@ -6,7 +6,7 @@ import { parseSort } from '../utils/parse-sort.js';
 import { validateDate } from '../utils/validators.js';
 
 const filterQuery = catchAsync(async (req, res, next) => {
-  const { active, date, from, to, sort } = { ...qs.parse(req.query) };
+  const { active, date, from, to, sort, extended } = { ...qs.parse(req.query) };
 
   req.active = parseBooleanQuery(active, true);
   if (date && validateDate(new Date(date))) {
@@ -22,6 +22,8 @@ const filterQuery = catchAsync(async (req, res, next) => {
   }
 
   if (sort) req.sort = parseSort(sort);
+
+  if (extended) req.extended = true;
 
   next();
 });

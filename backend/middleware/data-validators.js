@@ -3,6 +3,63 @@ import AppError from '../utils/app-error.js';
 import { validateDate } from '../utils/validators.js';
 import { RESOURCE_TYPES } from '../utils/config.js';
 
+const _hasInvalidDates = (req, requiredFields) =>
+  requiredFields.varNames.reduce((acc, varName, i) => {
+    if (requiredFields.varTypes[i] === 'date')
+      return (
+        acc || (req.body[varName] && !validateDate(new Date(req.body[varName])))
+      );
+    return acc;
+  }, false);
+
+const _hasInvalidUUIDs = (req, requiredFields) => {
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  return requiredFields.varNames.reduce((acc, varName, i) => {
+    if (requiredFields.varTypes[i] === 'id')
+      return acc || !uuidRegex.test(req.body[varName]);
+    return acc;
+  }, false);
+};
+
+export const checkRequiredFields = requiredFields => {
+  return catchAsync(async (req, res, next) => {
+    const isMissing = requiredFields.varNames.reduce((acc, varName, i) => {
+      if (requiredFields.varTypes[i] === 'text')
+        return acc || !req.body[varName]?.trim();
+      else
+        return (
+          acc || req.body[varName] === undefined || req.body[varName] === null
+        );
+    }, false);
+
+    if (isMissing) {
+      return next(new AppError(400, requiredFields.errorMessage));
+    }
+
+    if (_hasInvalidDates(req, requiredFields)) {
+      return next(
+        new AppError(
+          400,
+          'Las fechas suministradas no están en el formato correcto.',
+        ),
+      );
+    }
+
+    if (_hasInvalidUUIDs(req, requiredFields)) {
+      return next(
+        new AppError(
+          400,
+          'Los identificadores que referencian a otro recurso no son del formato correcto.',
+        ),
+      );
+    }
+
+    next();
+  });
+};
+
 export const validateDataForCompany = catchAsync(async (req, res, next) => {
   const { name } = req.body;
 
@@ -122,5 +179,16 @@ export const validateDataForSickLeaves = catchAsync(async (req, res, next) => {
     );
   }
 
+  next();
+});
+
+export const validateDataForCategory = catchAsync(async (req, res, next) => {
+  const { name } = req.body;
+
+  if (!name?.trim()) {
+    return next(
+      new AppError(400, 'Se necesita un nombre para crear una categoría.'),
+    );
+  }
   next();
 });
