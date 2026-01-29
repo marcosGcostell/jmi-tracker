@@ -54,44 +54,28 @@ export const getWorkRule = async id => {
   return rows[0];
 };
 
-export const getWorkSiteWorkRules = async (workSiteId, period) => {
-  const periodCondition = period
-    ? ` AND s.valid_from <= $2 AND (s.valid_to IS NULL OR s.valid_to >= $3)`
-    : '';
-  const values = [workSiteId];
-  if (period) values.push(period.to, period.from);
-
-  const sql = `
-    SELECT r.id, r.day_correction_minutes, r.valid_from, r.valid_to,
-      json_build_object(
-        'id', w.id,
-        'name', w.name
-      ) AS work_site,
-      json_build_object(
-        'id', c.id,
-        'name', c.name
-      ) AS company
-    FROM work_site_company_rules r
-    LEFT JOIN work_sites w ON r.work_site_id = w.id
-    LEFT JOIN companies c ON r.company_id = c.id
-    WHERE r.work_site_id = $1${periodCondition}
-    `;
-
-  const { rows } = await pool().query(sql, values);
-
-  return rows;
-};
-
-export const getWorkSiteAndCompanyWorkRules = async (
+export const getConditionedWorkRules = async (
   workSiteId,
   companyId,
   period,
 ) => {
-  const periodCondition = period
-    ? ` AND s.valid_from <= $2 AND (s.valid_to IS NULL OR s.valid_to >= $3)`
-    : '';
-  const values = [workSiteId, companyId];
-  if (period) values.push(period.to, period.from);
+  const whereString = { text: '', count: 0 };
+  const values = [];
+
+  if (workSiteId) {
+    whereString.text += `r.work_site_id = $${++whereString.count}`;
+    values.push(workSiteId);
+  }
+  if (companyId) {
+    whereString.text += whereString.count ? ' AND ' : '';
+    whereString.text += `r.company_id = $${++whereString.count}`;
+    values.push(companyId);
+  }
+  if (period) {
+    whereString.text += whereString.count ? ' AND ' : '';
+    whereString.text += `s.valid_from <= $${whereString.count + 1} AND (s.valid_to IS NULL OR s.valid_to >= $${whereString.count + 2})`;
+    values.push(period.to, period.from);
+  }
 
   const sql = `
     SELECT r.id, r.day_correction_minutes, r.valid_from, r.valid_to,
@@ -106,7 +90,7 @@ export const getWorkSiteAndCompanyWorkRules = async (
     FROM work_site_company_rules r
     LEFT JOIN work_sites w ON r.work_site_id = w.id
     LEFT JOIN companies c ON r.company_id = c.id
-    WHERE r.work_site_id = $1 AND r.company_id=$2${periodCondition}
+    WHERE ${whereString.text}
     `;
 
   const { rows } = await pool().query(sql, values);

@@ -1,6 +1,6 @@
 import * as SickLeave from '../../models/sick-leave.model.js';
 
-export default sickLeaveExists = async id => {
+const sickLeaveExists = async id => {
   const sickLeave = await SickLeave.getSickLeave(id);
   if (!sickLeave?.id) {
     throw new AppError(404, 'No se encuentra la baja en el registro.');
@@ -8,3 +8,5 @@ export default sickLeaveExists = async id => {
 
   return sickLeave;
 };
+
+export default sickLeaveExists;

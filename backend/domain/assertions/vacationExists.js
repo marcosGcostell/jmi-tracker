@@ -1,6 +1,6 @@
 import * as Vacation from '../../models/vacation.model.js';
 
-export default workSiteExists = async id => {
+const vacationExists = async id => {
   const vacation = await Vacation.getVacation(id);
   if (!vacation?.id) {
     throw new AppError(404, 'No se encuentra el registro de vacaciones.');
@@ -8,3 +8,5 @@ export default workSiteExists = async id => {
 
   return vacation;
 };
+
+export default vacationExists;

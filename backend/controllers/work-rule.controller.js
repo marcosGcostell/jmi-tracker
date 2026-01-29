@@ -32,6 +32,23 @@ export const getWorkRule = catchAsync(async (req, res, next) => {
   });
 });
 
+export const resolveGetWorkRule = catchAsync(async (req, res, next) => {
+  // Execute the query
+  const workRule = await WorkRuleService.resolveGetWorkRules(
+    req.workSiteId,
+    req.companyId,
+    req.period,
+  );
+
+  // Send response
+  res.status(200).json({
+    status: 'success',
+    data: {
+      workRule,
+    },
+  });
+});
+
 export const getWorkSiteWorkRules = catchAsync(async (req, res, next) => {
   // Execute the query
   const workRules = await WorkRuleService.getWorkSiteWorkRules(

@@ -1,18 +1,17 @@
 import catchAsync from '../utils/catch-async.js';
 import AppError from '../utils/app-error.js';
 import validateDate from '../domain/validators/validate-date.js';
-import { RESOURCE_TYPES, UUID_REGEX, TIME_REGEX } from '../utils/config.js';
+import validateUUID from '../domain/validators/validate-uuid.js';
+import validateResourceTypes from '../domain/validators/validate-resource-types.js';
+import { RESOURCE_TYPES, TIME_REGEX } from '../utils/config.js';
 
 const validators = {
   text: data => typeof data === 'string' && data.trim(),
   date: data => validateDate(new Date(data)),
   time: data => typeof data === 'string' && TIME_REGEX.test(data),
-  id: data => typeof data === 'string' && UUID_REGEX.test(data),
+  id: data => validateUUID(data),
   int: data => !isNaN(data),
-  resource: data =>
-    typeof data === 'string' &&
-    data.trim() &&
-    RESOURCE_TYPES.includes(data.trim()),
+  resource: data => validateResourceTypes(data),
 };
 
 export const checkRecordFields = recordFields => {

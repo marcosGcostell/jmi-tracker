@@ -12,21 +12,11 @@ export const getWorkRule = async id => {
   return workRuleExists(id);
 };
 
-export const getWorkSiteWorkRules = async (workSiteId, period) => {
-  await workSiteExists(workSiteId);
+export const resolveGetWorkRules = async (workSiteId, companyId, period) => {
+  if (workSiteId) await workSiteExists(workSiteId);
+  if (companyId) await companyExists(companyId);
 
-  return WorkRule.getWorkSiteWorkRules(workSiteId, period);
-};
-
-export const getWorkSiteAndCompanyWorkRules = async (
-  workSiteId,
-  companyId,
-  period,
-) => {
-  await workSiteExists(workSiteId);
-  await companyExists(companyId);
-
-  return WorkRule.getWorkSiteAndCompanyWorkRules(workSiteId, companyId, period);
+  return WorkRule.getConditionedWorkRules(workSiteId, companyId, period);
 };
 
 export const createWorkRule = async data => {
@@ -64,16 +54,15 @@ export const createWorkRule = async data => {
 export const updateWorkRule = async (id, data) => {
   const workRule = await workRuleExists(id);
 
-  const { workSiteId, companyId, dayCorrection } = data;
-  if (workSiteId) await workSiteExists(workSiteId);
-  if (companyId) await companyExists(companyId);
-
+  // Nobody can change the work-site or the company in a work rule
+  // Probably it will break the results for existing data
+  const { dayCorrection } = data;
   const validFrom = data.validFrom ? new Date(data.validFrom) : null;
   const validTo = data.validTo ? new Date(data.validTo) : null;
 
   const newData = {
-    workSiteId: workSiteId || workRule.work_site.id,
-    companyId: companyId || workRule.company.id,
+    workSiteId: workRule.work_site.id,
+    companyId: workRule.company.id,
     dayCorrection: dayCorrection ?? workRule.day_correction_minutes,
     validFrom: validFrom || workRule.valid_from,
     validTo: validTo || workRule.valid_to,
@@ -92,6 +81,7 @@ export const updateWorkRule = async (id, data) => {
 };
 
 export const deleteWorkRule = async id => {
+  // TODO We shouldn't be able to delete a working rule unless it's unused
   const workRule = await WorkRule.deleteWorkRule(id);
   if (!workRule) {
     throw new AppError(
