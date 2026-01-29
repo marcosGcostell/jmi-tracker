@@ -2,12 +2,12 @@ import * as Schedule from '../models/schedules.model.js';
 import * as Company from '../models/company.model.js';
 import AppError from '../utils/app-error.js';
 
-const _checkCompany = async companyId => {
+const _checkCompany = async (companyId, onlyMain = false) => {
   const company = await Company.getCompany(companyId);
   if (!company?.id) {
     throw new AppError(400, 'La empresa no existe.');
   }
-  if (!company.is_main) {
+  if (onlyMain && !company.is_main) {
     throw new AppError(
       400,
       'Solo la empresa principal puede tener horarios predeterminados.',
@@ -34,7 +34,7 @@ export const getSchedule = async id => {
 };
 
 export const getCompanySchedules = async (companyId, period) => {
-  await _checkCompany(companyId);
+  await _checkCompany(companyId, true);
 
   return Schedule.getCompanySchedules(companyId, period);
 };
@@ -43,7 +43,7 @@ export const createSchedule = async data => {
   const { companyId, startTime, endTime, dayCorrection, validFrom, validTo } =
     data;
 
-  await _checkCompany(companyId);
+  await _checkCompany(companyId, true);
 
   const newData = {
     companyId,
@@ -79,7 +79,7 @@ export const updateSchedule = async (id, data) => {
   }
 
   const { companyId, startTime, endTime, dayCorrection } = data;
-  if (companyId) await _checkCompany(companyId);
+  if (companyId) await _checkCompany(companyId, true);
 
   const validFrom = data.validFrom ? new Date(data.validFrom) : null;
   const validTo = data.validTo ? new Date(data.validTo) : null;
