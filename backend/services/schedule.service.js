@@ -47,8 +47,8 @@ export const createSchedule = async data => {
 
   const newData = {
     companyId,
-    startTime: new Date(startTime),
-    endTime: new Date(endTime),
+    startTime,
+    endTime,
     dayCorrection,
     validFrom: new Date(validFrom),
     validTo: validTo ? new Date(validTo) : null,
@@ -78,16 +78,14 @@ export const updateSchedule = async (id, data) => {
     throw new AppError(400, 'No se encuentra este registro de horario.');
   }
 
-  const { companyId, dayCorrection } = data;
-  await _checkCompany(companyId);
+  const { companyId, startTime, endTime, dayCorrection } = data;
+  if (companyId) await _checkCompany(companyId);
 
-  const startTime = data.startTime ? new Date(data.startTime) : null;
-  const endTime = data.endTime ? new Date(data.endTime) : null;
   const validFrom = data.validFrom ? new Date(data.validFrom) : null;
   const validTo = data.validTo ? new Date(data.validTo) : null;
 
   const newData = {
-    companyId: companyId || schedule.company_id,
+    companyId: companyId || schedule.company.id,
     startTime: startTime || schedule.start_time,
     endTime: endTime || schedule.end_time,
     dayCorrection: dayCorrection ?? schedule.day_correction_minutes,

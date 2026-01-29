@@ -14,7 +14,7 @@ export const getAllSchedules = async (onlyActive, period) => {
       json_build_object(
         'id', c.id,
         'name', c.name
-      ) AS company,
+      ) AS company
     FROM main_company_schedules s
     LEFT JOIN companies c ON s.company_id = c.id
     WHERE ($1::BOOLEAN IS NULL OR c.active = $1)${periodCondition}
@@ -33,7 +33,7 @@ export const getSchedule = async id => {
       json_build_object(
         'id', c.id,
         'name', c.name
-      ) AS company,
+      ) AS company
     FROM main_company_schedules s
     LEFT JOIN companies c ON s.company_id = c.id
     WHERE s.id = $1
@@ -56,7 +56,7 @@ export const getCompanySchedules = async (companyId, period) => {
       json_build_object(
         'id', c.id,
         'name', c.name
-      ) AS company,
+      ) AS company
     FROM main_company_schedules s
     LEFT JOIN companies c ON s.company_id = c.id
     WHERE s.company_id = $1${periodCondition}

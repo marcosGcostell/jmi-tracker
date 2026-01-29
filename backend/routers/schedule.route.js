@@ -18,13 +18,13 @@ const recordFields = [
   },
   {
     name: 'startTime',
-    type: 'date',
+    type: 'time',
     required: true,
     message: 'Hora de inicio de jornada',
   },
   {
     name: 'endTime',
-    type: 'date',
+    type: 'time',
     required: true,
     message: 'Hora de final de jornada',
   },
