@@ -1,4 +1,4 @@
-const sendAuthResponse = (res, { user, token, status }) => {
+export default (res, { user, token, status }) => {
   res.cookie('jwt', token, {
     expires: new Date(
       Date.now() + process.env.COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
@@ -15,5 +15,3 @@ const sendAuthResponse = (res, { user, token, status }) => {
     },
   });
 };
-
-export default sendAuthResponse;

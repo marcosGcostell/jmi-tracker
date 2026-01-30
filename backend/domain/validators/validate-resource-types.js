@@ -1,6 +1,6 @@
-import { RESOURCE_TYPES } from '../../utils/config';
+import { RESOURCE_TYPES } from '../../utils/config.js';
 
-export default validateResourceTypes = data => {
+export default data => {
   return (
     typeof data === 'string' &&
     data.trim() &&

@@ -1,6 +1,6 @@
 import * as Resource from '../../models/resource.model.js';
 
-const resourceExists = async (id, client = undefined) => {
+export default async (id, client = undefined) => {
   const resource = await Resource.getResource(id);
   if (!resource) {
     throw new AppError(404, 'El trabajador o equipo no existe.');
@@ -8,5 +8,3 @@ const resourceExists = async (id, client = undefined) => {
 
   return resource;
 };
-
-export default resourceExists;
