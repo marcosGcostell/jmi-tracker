@@ -1,6 +1,7 @@
 import * as Schedule from '../models/schedule.model.js';
 import scheduleExists from '../domain/assertions/scheduleExists.js';
 import companyExists from '../domain/assertions/companyExists.js';
+import { getPool } from '../db/pool.js';
 import AppError from '../utils/app-error.js';
 
 export const getAllSchedules = async (onlyActive, period) => {
@@ -12,29 +13,48 @@ export const getSchedule = async id => {
 };
 
 export const getCompanySchedules = async (companyId, period) => {
-  await companyExists(companyId, true);
+  const client = await getPool().connect();
 
-  return Schedule.getCompanySchedules(companyId, period);
+  try {
+    await client.query('BEGIN');
+    await companyExists(companyId, true, client);
+
+    const schedules = await Schedule.getCompanySchedules(companyId, period);
+
+    await client.query('COMMIT');
+    return schedules;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 };
 
 export const createSchedule = async data => {
+  const client = await getPool().connect();
   const { companyId, startTime, endTime, dayCorrection, validFrom, validTo } =
     data;
 
-  await companyExists(companyId, true);
-
-  const newData = {
-    companyId,
-    startTime,
-    endTime,
-    dayCorrection,
-    validFrom: new Date(validFrom),
-    validTo: validTo ? new Date(validTo) : null,
-  };
-
   try {
-    return Schedule.createSchedule(newData);
+    await client.query('BEGIN');
+    await companyExists(companyId, true, client);
+
+    const newData = {
+      companyId,
+      startTime,
+      endTime,
+      dayCorrection,
+      validFrom: new Date(validFrom),
+      validTo: validTo ? new Date(validTo) : null,
+    };
+
+    const schedule = await Schedule.createSchedule(newData, client);
+
+    await client.query('COMMIT');
+    return schedule;
   } catch (err) {
+    await client.query('ROLLBACK');
     if (err.error.code === '23P01') {
       throw new AppError(
         409,
@@ -47,36 +67,47 @@ export const createSchedule = async data => {
         'La fecha de finalización debe ser posterior a la de comienzo.',
       );
     } else throw err;
+  } finally {
+    client.release();
   }
 };
 
 export const updateSchedule = async (id, data) => {
-  const schedule = await scheduleExists(id);
-
-  const { companyId, startTime, endTime, dayCorrection } = data;
-  if (companyId) await companyExists(companyId, true);
-
-  const validFrom = data.validFrom ? new Date(data.validFrom) : null;
-  const validTo = data.validTo ? new Date(data.validTo) : null;
-
-  const newData = {
-    companyId: companyId || schedule.company.id,
-    startTime: startTime || schedule.start_time,
-    endTime: endTime || schedule.end_time,
-    dayCorrection: dayCorrection ?? schedule.day_correction_minutes,
-    validFrom: validFrom || schedule.valid_from,
-    validTo: validTo || schedule.valid_to,
-  };
+  const client = await getPool().connect();
 
   try {
-    return Schedule.updateSchedule(id, newData);
+    await client.query('BEGIN');
+    const schedule = await scheduleExists(id, client);
+
+    const { companyId, startTime, endTime, dayCorrection } = data;
+    if (companyId) await companyExists(companyId, true, client);
+
+    const validFrom = data.validFrom ? new Date(data.validFrom) : null;
+    const validTo = data.validTo ? new Date(data.validTo) : null;
+
+    const newData = {
+      companyId: companyId || schedule.company.id,
+      startTime: startTime || schedule.start_time,
+      endTime: endTime || schedule.end_time,
+      dayCorrection: dayCorrection ?? schedule.day_correction_minutes,
+      validFrom: validFrom || schedule.valid_from,
+      validTo: validTo || schedule.valid_to,
+    };
+
+    const result = await Schedule.updateSchedule(id, newData, client);
+
+    await client.query('COMMIT');
+    return result;
   } catch (err) {
+    await client.query('ROLLBACK');
     if (err.error.code === '23P01') {
       throw new AppError(
         400,
         'La empresa ya tiene un horario activo en ese periodo.',
       );
     } else throw err;
+  } finally {
+    client.release();
   }
 };
 

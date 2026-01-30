@@ -1,7 +1,7 @@
 import * as Vacation from '../models/vacation.model.js';
 import vacationExists from '../domain/assertions/vacationExists.js';
 import resourceExists from '../domain/assertions/resourceExists.js';
-import * as Resource from '../models/resource.model.js';
+import { getPool } from '../db/pool.js';
 import AppError from '../utils/app-error.js';
 
 export const getAllVacations = async (onlyActive, period) => {
@@ -13,17 +13,24 @@ export const getVacation = async id => {
 };
 
 export const createVacation = async data => {
-  await resourceExists(data.resourceId);
-
-  const newData = {
-    resourceId: data.resourceId,
-    startDate: new Date(data.startDate),
-    endDate: new Date(data.endDate),
-  };
+  const client = await getPool().connect();
 
   try {
-    return Vacation.createVacation(newData);
+    await client.query('BEGIN');
+    await resourceExists(data.resourceId, client);
+
+    const newData = {
+      resourceId: data.resourceId,
+      startDate: new Date(data.startDate),
+      endDate: new Date(data.endDate),
+    };
+
+    const vacation = await Vacation.createVacation(newData, client);
+
+    await client.query('COMMIT');
+    return vacation;
   } catch (err) {
+    await client.query('ROLLBACK');
     if (err.error.code === '23P01') {
       throw new AppError(
         409,
@@ -36,31 +43,42 @@ export const createVacation = async data => {
         'La fecha de finalización debe ser posterior a la de comienzo.',
       );
     } else throw err;
+  } finally {
+    client.release();
   }
 };
 
 export const updateVacation = async (id, data) => {
-  const vacation = await vacationExists(id);
-
-  const { resourceId } = data;
-  const startDate = data.startDate ? new Date(data.startDate) : null;
-  const endDate = data.endDate ? new Date(data.endDate) : null;
-
-  const newData = {
-    resourceId: resourceId || vacation.resource_id,
-    startDate: startDate || vacation.start_date,
-    endDate: endDate || vacation.end_date,
-  };
+  const client = await getPool().connect();
 
   try {
-    return Vacation.updateVacation(id, newData);
+    await client.query('BEGIN');
+    const vacation = await vacationExists(id, client);
+
+    const { resourceId } = data;
+    const startDate = data.startDate ? new Date(data.startDate) : null;
+    const endDate = data.endDate ? new Date(data.endDate) : null;
+
+    const newData = {
+      resourceId: resourceId || vacation.resource_id,
+      startDate: startDate || vacation.start_date,
+      endDate: endDate || vacation.end_date,
+    };
+
+    const result = await Vacation.updateVacation(id, newData, client);
+
+    await client.query('COMMIT');
+    return result;
   } catch (err) {
+    await client.query('ROLLBACK');
     if (err.error.code === '23P01') {
       throw new AppError(
         400,
         'El trabajador ya tiene vacaciones en ese periodo.',
       );
     } else throw err;
+  } finally {
+    client.release();
   }
 };
 
