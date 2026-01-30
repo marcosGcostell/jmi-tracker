@@ -1,8 +1,10 @@
 import { getPool } from '../db/pool.js';
 
-const pool = () => getPool();
-
-export const getAllSchedules = async (onlyActive, period) => {
+export const getAllSchedules = async (
+  onlyActive,
+  period,
+  client = getPool(),
+) => {
   const periodCondition = period
     ? ` AND s.valid_from <= $2 AND (s.valid_to IS NULL OR s.valid_to >= $3)`
     : '';
@@ -21,13 +23,13 @@ export const getAllSchedules = async (onlyActive, period) => {
     ORDER BY s.start_time DESC
     `;
 
-  const { rows } = await pool().query(sql, values);
+  const { rows } = await client.query(sql, values);
 
   return rows;
 };
 
-export const getSchedule = async id => {
-  const { rows } = await pool().query(
+export const getSchedule = async (id, client = getPool()) => {
+  const { rows } = await client.query(
     `
     SELECT s.id, s.start_time, s.end_time, s.day_correction_minutes, s.valid_from, s.valid_to,
       json_build_object(
@@ -44,7 +46,11 @@ export const getSchedule = async id => {
   return rows[0];
 };
 
-export const getCompanySchedules = async (companyId, period) => {
+export const getCompanySchedules = async (
+  companyId,
+  period,
+  client = getPool(),
+) => {
   const periodCondition = period
     ? ` AND s.valid_from <= $2 AND (s.valid_to IS NULL OR s.valid_to >= $3)`
     : '';
@@ -62,17 +68,17 @@ export const getCompanySchedules = async (companyId, period) => {
     WHERE s.company_id = $1${periodCondition}
     `;
 
-  const { rows } = await pool().query(sql, values);
+  const { rows } = await client.query(sql, values);
 
   return rows;
 };
 
-export const createSchedule = async data => {
+export const createSchedule = async (data, client = getPool()) => {
   try {
     const { companyId, startTime, endTime, dayCorrection, validFrom, validTo } =
       data;
 
-    const { rows } = await pool().query(
+    const { rows } = await client.query(
       `
     INSERT INTO main_company_schedules (company_id, start_time, end_time, day_correction_minutes, valid_from, valid_to)
     VALUES ($1, $2, $3, $4, $5, $6)
@@ -87,12 +93,12 @@ export const createSchedule = async data => {
   }
 };
 
-export const updateSchedule = async (id, data) => {
+export const updateSchedule = async (id, data, client = getPool()) => {
   try {
     const { companyId, startTime, endTime, dayCorrection, validFrom, validTo } =
       data;
 
-    const { rows } = await pool().query(
+    const { rows } = await client.query(
       `
     UPDATE main_company_schedules
     SET company_id = $1, start_time = $2, end_time = $3, day_correction_minutes = $4, valid_from = $5, valid_to = $6
@@ -108,21 +114,16 @@ export const updateSchedule = async (id, data) => {
   }
 };
 
-export const deleteSchedule = async id => {
-  const client = await pool().connect();
-  try {
-    const { rowCount, rows } = await client.query(
-      `
+export const deleteSchedule = async (id, client = getPool()) => {
+  const { rowCount, rows } = await client.query(
+    `
     DELETE 
     FROM main_company_schedules
     WHERE id = $1
     RETURNING id
   `,
-      [id],
-    );
+    [id],
+  );
 
-    return rowCount ? { id: rows[0].id } : null;
-  } finally {
-    client.release();
-  }
+  return rowCount ? { id: rows[0].id } : null;
 };

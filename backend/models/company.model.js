@@ -1,9 +1,7 @@
 import { getPool } from '../db/pool.js';
 
-const pool = () => getPool();
-
-export const getAllCompanies = async onlyActive => {
-  const { rows } = await pool().query(
+export const getAllCompanies = async (onlyActive, client = getPool()) => {
+  const { rows } = await client.query(
     `
     SELECT id, name, is_main, active
     FROM companies
@@ -16,8 +14,8 @@ export const getAllCompanies = async onlyActive => {
   return rows;
 };
 
-export const getCompany = async id => {
-  const { rows } = await pool().query(
+export const getCompany = async (id, client = getPool()) => {
+  const { rows } = await client.query(
     `
     SELECT id, name, is_main, active
     FROM companies
@@ -29,8 +27,8 @@ export const getCompany = async id => {
   return rows[0];
 };
 
-export const getCompanyByName = async name => {
-  const { rows } = await pool().query(
+export const getCompanyByName = async (name, client = getPool()) => {
+  const { rows } = await client.query(
     `
     SELECT id, name, is_main, active
     FROM companies
@@ -42,10 +40,10 @@ export const getCompanyByName = async name => {
   return rows[0];
 };
 
-export const createCompany = async data => {
+export const createCompany = async (data, client = getPool()) => {
   const { name } = data;
 
-  const { rows } = await pool().query(
+  const { rows } = await client.query(
     `
     INSERT INTO companies (name)
     VALUES ($1)
@@ -57,10 +55,10 @@ export const createCompany = async data => {
   return rows[0];
 };
 
-export const updateCompany = async (id, data) => {
+export const updateCompany = async (id, data, client = getPool()) => {
   const { name, isMain, active } = data;
 
-  const { rows } = await pool().query(
+  const { rows } = await client.query(
     `
     UPDATE companies
     SET name = $1, is_main = $2, active = $3
@@ -73,8 +71,8 @@ export const updateCompany = async (id, data) => {
   return rows[0];
 };
 
-export const disableCompany = async id => {
-  const { rows } = await pool().query(
+export const disableCompany = async (id, client = getPool()) => {
+  const { rows } = await client.query(
     `
     UPDATE companies
     SET active = false

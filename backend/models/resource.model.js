@@ -1,9 +1,7 @@
 import { getPool } from '../db/pool.js';
 
-const pool = () => getPool();
-
-export const getAllResources = async onlyActive => {
-  const { rows } = await pool().query(
+export const getAllResources = async (onlyActive, client = getPool()) => {
+  const { rows } = await client.query(
     `
     SELECT r.id, r.name, r.resource_type, r.active,
       json_build_object(
@@ -26,8 +24,8 @@ export const getAllResources = async onlyActive => {
   return rows;
 };
 
-export const getResource = async id => {
-  const { rows } = await pool().query(
+export const getResource = async (id, client = getPool()) => {
+  const { rows } = await client.query(
     `
     SELECT r.id, r.name, r.user_id, r.resource_type, r.active,
       json_build_object(
@@ -49,8 +47,12 @@ export const getResource = async id => {
   return rows[0];
 };
 
-export const getCompanyResources = async (companyId, onlyActive) => {
-  const { rows } = await pool().query(
+export const getCompanyResources = async (
+  companyId,
+  onlyActive,
+  client = getPool(),
+) => {
+  const { rows } = await client.query(
     `
     SELECT r.id, r.name, r.resource_type, r.active, c.name AS company,
       json_build_object(
@@ -74,8 +76,9 @@ export const getCompanyResourcesWithStatus = async (
   companyId,
   onlyActive,
   date,
+  client = getPool(),
 ) => {
-  const { rows } = await pool().query(
+  const { rows } = await client.query(
     `
     SELECT r.id, r.name, r.resource_type, r.active, c.name AS company,
       json_build_object(
@@ -101,8 +104,8 @@ export const getCompanyResourcesWithStatus = async (
   return rows;
 };
 
-export const findResource = async (companyId, name) => {
-  const { rows } = await pool().query(
+export const findResource = async (companyId, name, client = getPool()) => {
+  const { rows } = await client.query(
     `
     SELECT r.id, r.name, r.resource_type, r.active, c.name AS company,
       json_build_object(
@@ -120,8 +123,11 @@ export const findResource = async (companyId, name) => {
   return rows[0];
 };
 
-export const getResourcesWithCategory = async categoryId => {
-  const { rows } = await pool().query(
+export const getResourcesWithCategory = async (
+  categoryId,
+  client = getPool(),
+) => {
+  const { rows } = await client.query(
     `
     SELECT id
     FROM resources
@@ -135,10 +141,10 @@ export const getResourcesWithCategory = async categoryId => {
   return rows;
 };
 
-export const createResource = async data => {
+export const createResource = async (data, client = getPool()) => {
   const { companyId, categoryId, name, resourceType } = data;
 
-  const { rows } = await pool().query(
+  const { rows } = await client.query(
     `
     WITH new_resource AS (
       INSERT INTO resources (company_id, category_id, name, resource_type)
@@ -164,10 +170,10 @@ export const createResource = async data => {
   return rows[0];
 };
 
-export const updateResource = async (id, data) => {
+export const updateResource = async (id, data, client = getPool()) => {
   const { name, userId, companyId, categoryId, resourceType, active } = data;
 
-  const { rows } = await pool().query(
+  const { rows } = await client.query(
     `
     WITH updated_resource AS (
       UPDATE resources
@@ -194,8 +200,8 @@ export const updateResource = async (id, data) => {
   return rows[0];
 };
 
-export const disableResource = async id => {
-  const { rows } = await pool().query(
+export const disableResource = async (id, client = getPool()) => {
+  const { rows } = await client.query(
     `
     WITH updated_resource AS (
       UPDATE resources

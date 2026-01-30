@@ -1,8 +1,6 @@
 import { getPool } from '../db/pool.js';
 
-const pool = () => getPool();
-
-const _assignUsers = async (client, workSiteId, userIds) => {
+const _assignUsers = async (workSiteId, userIds, client) => {
   const values = userIds.map((_, i) => `($1, $${i + 2})`).join(',');
 
   await client.query(
@@ -15,7 +13,7 @@ const _assignUsers = async (client, workSiteId, userIds) => {
   );
 };
 
-const _getFullWorkSite = async (client, workSiteId) => {
+const _getFullWorkSite = async (workSiteId, client) => {
   const { rows } = await client.query(
     `
     SELECT w.id, w.name, w.code, w.is_open, w.start_date, w.end_date,
@@ -40,8 +38,8 @@ const _getFullWorkSite = async (client, workSiteId) => {
   return rows[0];
 };
 
-export const getAllWorkSites = async onlyActive => {
-  const { rows } = await pool().query(
+export const getAllWorkSites = async (onlyActive, client = getPool()) => {
+  const { rows } = await client.query(
     `
     SELECT w.id, w.name, w.code, w.is_open, w.start_date, w.end_date,
     COALESCE(
@@ -66,8 +64,12 @@ export const getAllWorkSites = async onlyActive => {
   return rows;
 };
 
-export const findMyWorkSites = async (userId, onlyActive = null) => {
-  const { rows } = await pool().query(
+export const findMyWorkSites = async (
+  userId,
+  onlyActive = null,
+  client = getPool(),
+) => {
+  const { rows } = await client.query(
     `
     SELECT w.id, w.name, w.code, w.is_open, w.start_date, w.end_date,
     COALESCE(
@@ -92,10 +94,11 @@ export const findMyWorkSites = async (userId, onlyActive = null) => {
   return rows;
 };
 
-export const getWorkSite = async id => _getFullWorkSite(pool(), id);
+export const getWorkSite = async (id, client = getPool()) =>
+  _getFullWorkSite(id, client);
 
-export const getWorkSiteByCode = async code => {
-  const { rows } = await pool().query(
+export const getWorkSiteByCode = async (code, client = getPool()) => {
+  const { rows } = await client.query(
     `
     SELECT w.id, w.name, w.code, w.is_open, w.start_date, w.end_date,
     COALESCE(
@@ -119,80 +122,52 @@ export const getWorkSiteByCode = async code => {
   return rows[0];
 };
 
-export const createWorkSite = async (data, userIds) => {
-  const client = await pool().connect();
-
-  try {
-    await client.query('BEGIN');
-
-    const { name, code, startDate } = data;
-    const { rows } = await client.query(
-      `
+export const createWorkSite = async (data, userIds, client = getPool()) => {
+  const { name, code, startDate } = data;
+  const { rows } = await client.query(
+    `
     INSERT INTO work_sites (name, code, start_date)
     VALUES ($1, $2, $3)
     RETURNING id, name, code, is_open, start_date, end_date
   `,
-      [name, code, startDate],
-    );
+    [name, code, startDate],
+  );
 
-    if (userIds?.length) {
-      await _assignUsers(client, rows[0].id, userIds);
-    }
-
-    const workSite = await _getFullWorkSite(client, rows[0].id);
-
-    await client.query('COMMIT');
-    return workSite;
-  } catch (err) {
-    await client.query('ROLLBACK');
-    throw err;
-  } finally {
-    client.release();
+  if (userIds?.length) {
+    await _assignUsers(rows[0].id, userIds, client);
   }
+
+  return _getFullWorkSite(rows[0].id, client);
 };
 
-export const updateWorkSite = async (id, data, userIds) => {
-  const client = await pool().connect();
-
-  try {
-    await client.query('BEGIN');
-
-    const { name, code, startDate, endDate } = data;
-    const { rows } = await client.query(
-      `
+export const updateWorkSite = async (id, data, userIds, client = getPool()) => {
+  const { name, code, startDate, endDate } = data;
+  const { rows } = await client.query(
+    `
     UPDATE work_sites
     SET name = $1, code = $2, start_date = $3, end_date = $4
     WHERE id = $5
     RETURNING id, name, code, is_open, start_date, end_date
   `,
-      [name, code, startDate, endDate, id],
-    );
+    [name, code, startDate, endDate, id],
+  );
 
-    if (userIds !== undefined && userIds !== null) {
-      // Delete all previous asigned users to this worksite
-      await client.query(
-        `
+  if (userIds !== undefined && userIds !== null) {
+    // Delete all previous asigned users to this worksite
+    await client.query(
+      `
         DELETE
         FROM user_work_sites
         WHERE work_site_id = $1;
         `,
-        [id],
-      );
+      [id],
+    );
 
-      // Reasign the new list
-      if (userIds?.length) {
-        await _assignUsers(client, rows[0].id, userIds);
-      }
+    // Reasign the new list
+    if (userIds?.length) {
+      await _assignUsers(rows[0].id, userIds, client);
     }
-
-    const workSite = await _getFullWorkSite(client, rows[0].id);
-
-    await client.query('COMMIT');
-    return workSite;
-  } catch (err) {
-    await client.query('ROLLBACK');
-    throw err;
-  } finally {
-    client.release();
   }
+
+  return _getFullWorkSite(rows[0].id, client);
 };

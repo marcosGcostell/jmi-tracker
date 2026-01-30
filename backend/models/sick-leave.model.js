@@ -1,8 +1,10 @@
 import { getPool } from '../db/pool.js';
 
-const pool = () => getPool();
-
-export const getAllSickLeaves = async (onlyActive, period) => {
+export const getAllSickLeaves = async (
+  onlyActive,
+  period,
+  client = getPool(),
+) => {
   const periodCondition = period
     ? ` AND s.start_date <= $2 AND (s.end_date IS NULL OR s.end_date >= $3)`
     : '';
@@ -22,7 +24,7 @@ export const getAllSickLeaves = async (onlyActive, period) => {
   return rows;
 };
 
-export const getSickLeave = async id => {
+export const getSickLeave = async (id, client = getPool()) => {
   const { rows } = await pool().query(
     `
     SELECT s.id, s.resource_id, r.name AS name, s.start_date, s.end_date
@@ -36,7 +38,11 @@ export const getSickLeave = async id => {
   return rows[0];
 };
 
-export const getWorkerSickLeaves = async (resourceId, period) => {
+export const getWorkerSickLeaves = async (
+  resourceId,
+  period,
+  client = getPool(),
+) => {
   const periodCondition = period
     ? ` AND s.start_date <= $2 AND (s.end_date IS NULL OR s.end_date >= $3)`
     : '';
@@ -55,7 +61,7 @@ export const getWorkerSickLeaves = async (resourceId, period) => {
   return rows;
 };
 
-export const createSickLeave = async data => {
+export const createSickLeave = async (data, client = getPool()) => {
   try {
     const { resourceId, startDate, endDate } = data;
 
@@ -74,7 +80,7 @@ export const createSickLeave = async data => {
   }
 };
 
-export const updateSickLeave = async (id, data) => {
+export const updateSickLeave = async (id, data, client = getPool()) => {
   try {
     const { resourceId, startDate, endDate } = data;
 
@@ -94,21 +100,16 @@ export const updateSickLeave = async (id, data) => {
   }
 };
 
-export const deleteSickLeave = async id => {
-  const client = await pool().connect();
-  try {
-    const { rowCount, rows } = await client.query(
-      `
+export const deleteSickLeave = async (id, client = getPool()) => {
+  const { rowCount, rows } = await client.query(
+    `
     DELETE 
     FROM sick_leaves
     WHERE id = $1
     RETURNING id
   `,
-      [id],
-    );
+    [id],
+  );
 
-    return rowCount ? { id: rows[0].id } : null;
-  } finally {
-    client.release();
-  }
+  return rowCount ? { id: rows[0].id } : null;
 };

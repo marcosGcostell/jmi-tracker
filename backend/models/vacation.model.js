@@ -1,8 +1,10 @@
 import { getPool } from '../db/pool.js';
 
-const pool = () => getPool();
-
-export const getAllVacations = async (onlyActive, period) => {
+export const getAllVacations = async (
+  onlyActive,
+  period,
+  client = getPool(),
+) => {
   const periodCondition = period
     ? ` AND v.start_date <= $2 AND (v.end_date IS NULL OR v.end_date >= $3)`
     : '';
@@ -17,13 +19,13 @@ export const getAllVacations = async (onlyActive, period) => {
     ORDER BY v.start_date DESC
     `;
 
-  const { rows } = await pool().query(sql, values);
+  const { rows } = await client.query(sql, values);
 
   return rows;
 };
 
-export const getVacation = async id => {
-  const { rows } = await pool().query(
+export const getVacation = async (id, client = getPool()) => {
+  const { rows } = await client.query(
     `
     SELECT v.id, v.resource_id, r.name AS name, v.start_date, v.end_date
     FROM vacations v
@@ -36,7 +38,11 @@ export const getVacation = async id => {
   return rows[0];
 };
 
-export const getWorkerVacations = async (resourceId, period) => {
+export const getWorkerVacations = async (
+  resourceId,
+  period,
+  client = getPool(),
+) => {
   const periodCondition = period
     ? ` AND v.start_date <= $2 AND (v.end_date IS NULL OR v.end_date >= $3)`
     : '';
@@ -50,16 +56,16 @@ export const getWorkerVacations = async (resourceId, period) => {
     WHERE v.resource_id = $1${periodCondition}
     `;
 
-  const { rows } = await pool().query(sql, values);
+  const { rows } = await client.query(sql, values);
 
   return rows;
 };
 
-export const createVacation = async data => {
+export const createVacation = async (data, client = getPool()) => {
   try {
     const { resourceId, startDate, endDate } = data;
 
-    const { rows } = await pool().query(
+    const { rows } = await client.query(
       `
     INSERT INTO vacations (resource_id, start_date, end_date)
     VALUES ($1, $2, $3)
@@ -74,11 +80,11 @@ export const createVacation = async data => {
   }
 };
 
-export const updateVacation = async (id, data) => {
+export const updateVacation = async (id, data, client = getPool()) => {
   try {
     const { resourceId, startDate, endDate } = data;
 
-    const { rows } = await pool().query(
+    const { rows } = await client.query(
       `
     UPDATE vacations
     SET resource_id = $1, start_date = $2, end_date = $3
@@ -94,21 +100,16 @@ export const updateVacation = async (id, data) => {
   }
 };
 
-export const deleteVacation = async id => {
-  const client = await pool().connect();
-  try {
-    const { rowCount, rows } = await client.query(
-      `
+export const deleteVacation = async (id, client = getPool()) => {
+  const { rowCount, rows } = await client.query(
+    `
     DELETE 
     FROM vacations
     WHERE id = $1
     RETURNING id
   `,
-      [id],
-    );
+    [id],
+  );
 
-    return rowCount ? { id: rows[0].id } : null;
-  } finally {
-    client.release();
-  }
+  return rowCount ? { id: rows[0].id } : null;
 };

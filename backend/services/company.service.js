@@ -17,13 +17,23 @@ export const getCompanyResources = async (id, onlyActive, date) => {
   const client = await getPool().connect();
 
   try {
-    const company = await companyExists(id);
+    await client.query('BEGIN');
+    const company = await companyExists(id, client);
 
     if (company.is_main && date) {
-      return Resource.getCompanyResourcesWithStatus(id, onlyActive, date);
+      return Resource.getCompanyResourcesWithStatus(
+        id,
+        onlyActive,
+        date,
+        client,
+      );
     }
 
-    const resources = await Resource.getCompanyResources(id, onlyActive);
+    const resources = await Resource.getCompanyResources(
+      id,
+      onlyActive,
+      client,
+    );
 
     if (!resources.length) {
       throw new AppError(400, 'La empresa no tiene trabajadores.');

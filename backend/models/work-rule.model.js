@@ -1,8 +1,10 @@
 import { getPool } from '../db/pool.js';
 
-const pool = () => getPool();
-
-export const getAllWorkRules = async (onlyActive, period) => {
+export const getAllWorkRules = async (
+  onlyActive,
+  period,
+  client = getPool(),
+) => {
   const periodCondition = period
     ? ` AND r.valid_from <= $2 AND (r.valid_to IS NULL OR r.valid_to >= $3)`
     : '';
@@ -26,13 +28,13 @@ export const getAllWorkRules = async (onlyActive, period) => {
     ORDER BY r.start_time DESC
     `;
 
-  const { rows } = await pool().query(sql, values);
+  const { rows } = await client.query(sql, values);
 
   return rows;
 };
 
-export const getWorkRule = async id => {
-  const { rows } = await pool().query(
+export const getWorkRule = async (id, client = getPool()) => {
+  const { rows } = await client.query(
     `
     SELECT r.id, r.day_correction_minutes, r.valid_from, r.valid_to,
       json_build_object(
@@ -58,6 +60,7 @@ export const getConditionedWorkRules = async (
   workSiteId,
   companyId,
   period,
+  client = getPool(),
 ) => {
   const whereString = { text: '', count: 0 };
   const values = [];
@@ -93,16 +96,16 @@ export const getConditionedWorkRules = async (
     WHERE ${whereString.text}
     `;
 
-  const { rows } = await pool().query(sql, values);
+  const { rows } = await client.query(sql, values);
 
   return rows;
 };
 
-export const createWorkRule = async data => {
+export const createWorkRule = async (data, client = getPool()) => {
   try {
     const { workSiteId, companyId, dayCorrection, validFrom, validTo } = data;
 
-    const { rows } = await pool().query(
+    const { rows } = await client.query(
       `
     INSERT INTO work_site_company_rules (work_site_id, company_id, day_correction_minutes, valid_from, valid_to)
     VALUES ($1, $2, $3, $4, $5)
@@ -117,11 +120,11 @@ export const createWorkRule = async data => {
   }
 };
 
-export const updateWorkRule = async (id, data) => {
+export const updateWorkRule = async (id, data, client = getPool()) => {
   try {
     const { workSiteId, companyId, dayCorrection, validFrom, validTo } = data;
 
-    const { rows } = await pool().query(
+    const { rows } = await client.query(
       `
     UPDATE work_site_company_rules
     SET work_site_id= $1, company_id = $2, day_correction_minutes = $3, valid_from = $4, valid_to = $5
@@ -137,21 +140,16 @@ export const updateWorkRule = async (id, data) => {
   }
 };
 
-export const deleteWorkRule = async id => {
-  const client = await pool().connect();
-  try {
-    const { rowCount, rows } = await client.query(
-      `
+export const deleteWorkRule = async (id, client = getPool()) => {
+  const { rowCount, rows } = await client.query(
+    `
     DELETE 
     FROM work_site_company_rules
     WHERE id = $1
     RETURNING id
   `,
-      [id],
-    );
+    [id],
+  );
 
-    return rowCount ? { id: rows[0].id } : null;
-  } finally {
-    client.release();
-  }
+  return rowCount ? { id: rows[0].id } : null;
 };
