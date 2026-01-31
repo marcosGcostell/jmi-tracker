@@ -37,6 +37,7 @@ export const getCompanySchedules = catchAsync(async (req, res, next) => {
   const schedules = await scheduleService.getCompanySchedules(
     req.params.id,
     req.period,
+    req.date,
   );
 
   // Send response

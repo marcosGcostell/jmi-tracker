@@ -1,7 +1,14 @@
 import pg from 'pg';
 import AppError from '../utils/app-error.js';
 
-const { Pool } = pg;
+const { Pool, types } = pg;
+
+// pg driver converts a postgres date stored as YYYY-MM-DD
+// to a JavaScript Date Object, and express stringify in UTC+0
+// in the response (big problem with UTC shift issues)
+// With this, we set the parser for date type as it is
+types.setTypeParser(1082, val => val); // 1082 = DATE
+
 let pool;
 
 export const initPool = () => {

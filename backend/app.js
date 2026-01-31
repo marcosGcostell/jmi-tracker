@@ -8,9 +8,10 @@ import rateLimit from 'express-rate-limit';
 
 import userRouter from './routers/user.route.js';
 import companyRouter from './routers/company.route.js';
+import workSiteRouter from './routers/work-site.route.js';
 import resourceRouter from './routers/resource.route.js';
 import categoryRouter from './routers/category.route.js';
-import workSiteRouter from './routers/work-site.route.js';
+import workRuleRouter from './routers/work-rule.route.js';
 import scheduleRouter from './routers/schedule.route.js';
 import vacationRouter from './routers/vacation.route.js';
 import sickLeaveRouter from './routers/sick-leave.route.js';
@@ -56,9 +57,10 @@ app.use((req, res, next) => {
 // ROUTES
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/companies', companyRouter);
+app.use('/api/v1/worksites', workSiteRouter);
 app.use('/api/v1/resources', resourceRouter);
 app.use('/api/v1/categories', categoryRouter);
-app.use('/api/v1/worksites', workSiteRouter);
+app.use('/api/v1/workrules', workRuleRouter);
 app.use('/api/v1/schedules', scheduleRouter);
 app.use('/api/v1/vacations', vacationRouter);
 app.use('/api/v1/sickleaves', sickLeaveRouter);

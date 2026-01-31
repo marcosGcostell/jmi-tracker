@@ -13,8 +13,7 @@ export const getWorkSite = async id => {
 
 export const createWorkSite = async data => {
   const client = await getPool().connect();
-  const { name, code, userIds } = data;
-  const startDate = data.startDate ? new Date(data.startDate) : null;
+  const { name, code, userIds, startDate } = data;
 
   try {
     await client.query('BEGIN');
@@ -38,7 +37,7 @@ export const createWorkSite = async data => {
     return workSite;
   } catch (err) {
     await client.query('ROLLBACK');
-    if (err.code === '23503') {
+    if (err?.code === '23503') {
       throw new AppError(
         400,
         'Uno de los usuarios que se intenta asignar, no existe.',
@@ -52,9 +51,7 @@ export const createWorkSite = async data => {
 
 export const updateWorkSite = async (id, data) => {
   const client = await getPool().connect();
-  const { name, code, userIds } = data;
-  const startDate = data.startDate ? new Date(data.startDate) : null;
-  const endDate = data.endDate ? new Date(data.endDate) : null;
+  const { name, code, userIds, startDate, endDate } = data;
 
   try {
     await client.query('BEGIN');
@@ -68,7 +65,7 @@ export const updateWorkSite = async (id, data) => {
     };
 
     // This allows to set the endDate to null after is set
-    if (data.endDate !== null) newData.endDate = null;
+    if (data.endDate === null) newData.endDate = null;
 
     const result = await WorkSite.updateWorkSite(id, newData, userIds, client);
 
@@ -76,7 +73,7 @@ export const updateWorkSite = async (id, data) => {
     return result;
   } catch (err) {
     await client.query('ROLLBACK');
-    if (err.code === '23503') {
+    if (err?.code === '23503') {
       throw new AppError(
         400,
         'Uno de los usuarios que se intenta asignar no existe.',

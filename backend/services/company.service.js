@@ -18,7 +18,7 @@ export const getCompanyResources = async (id, onlyActive, date) => {
 
   try {
     await client.query('BEGIN');
-    const company = await companyExists(id, false, client);
+    const company = await companyExists(id, null, client);
 
     if (company.is_main && date) {
       return Resource.getCompanyResourcesWithStatus(
@@ -97,7 +97,7 @@ export const updateCompany = async (id, data, isAdmin) => {
 
   try {
     await client.query('BEGIN');
-    const company = await companyExists(id, false, client);
+    const company = await companyExists(id, null, client);
 
     if (company.is_main && !isAdmin) {
       throw new AppError(
@@ -129,13 +129,10 @@ export const deleteCompany = async id => {
 
   try {
     await client.query('BEGIN');
-    const company = await companyExists(id, false, client);
+    const company = await companyExists(id, 'regular', client);
 
     if (!company?.active)
       throw new AppError(400, 'La empresa ya está deshabilitada.');
-
-    if (company.is_main)
-      throw new AppError(400, 'No se puede deshabilitar la empresa principal.');
 
     const result = await Company.disableCompany(company.id);
 

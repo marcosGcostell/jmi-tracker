@@ -1,7 +1,8 @@
 import * as Schedule from '../../models/schedule.model.js';
+import AppError from '../../utils/app-error.js';
 
 export default async (id, client = undefined) => {
-  const schedule = await Schedule.getSchedule(id);
+  const schedule = await Schedule.getSchedule(id, client);
   if (!schedule) {
     throw new AppError(
       404,

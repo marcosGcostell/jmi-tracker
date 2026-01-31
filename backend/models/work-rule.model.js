@@ -6,7 +6,7 @@ export const getAllWorkRules = async (
   client = getPool(),
 ) => {
   const periodCondition = period
-    ? ` AND r.valid_from <= $2 AND (r.valid_to IS NULL OR r.valid_to >= $3)`
+    ? ` AND r.valid_from <= $2::date AND (r.valid_to IS NULL OR r.valid_to >= $3::date)`
     : '';
   const values = [onlyActive];
   if (period) values.push(period.to, period.from);
@@ -25,7 +25,7 @@ export const getAllWorkRules = async (
     LEFT JOIN work_sites w ON r.work_site_id = w.id
     LEFT JOIN companies c ON r.company_id = c.id
     WHERE ($1::BOOLEAN IS NULL OR c.active = $1)${periodCondition}
-    ORDER BY r.start_time DESC
+    ORDER BY r.valid_from DESC
     `;
 
   const { rows } = await client.query(sql, values);
@@ -76,7 +76,7 @@ export const getConditionedWorkRules = async (
   }
   if (period) {
     whereString.text += whereString.count ? ' AND ' : '';
-    whereString.text += `s.valid_from <= $${whereString.count + 1} AND (s.valid_to IS NULL OR s.valid_to >= $${whereString.count + 2})`;
+    whereString.text += `r.valid_from <= $${whereString.count + 1}::date AND (r.valid_to IS NULL OR r.valid_to >= $${whereString.count + 2}::date)`;
     values.push(period.to, period.from);
   }
 
@@ -108,7 +108,7 @@ export const createWorkRule = async (data, client = getPool()) => {
     const { rows } = await client.query(
       `
     INSERT INTO work_site_company_rules (work_site_id, company_id, day_correction_minutes, valid_from, valid_to)
-    VALUES ($1, $2, $3, $4, $5)
+    VALUES ($1, $2, $3, $4::date, $5::date)
     RETURNING id, work_site_id, company_id, day_correction_minutes, valid_from, valid_to
   `,
       [workSiteId, companyId, dayCorrection, validFrom, validTo],
@@ -127,7 +127,7 @@ export const updateWorkRule = async (id, data, client = getPool()) => {
     const { rows } = await client.query(
       `
     UPDATE work_site_company_rules
-    SET work_site_id= $1, company_id = $2, day_correction_minutes = $3, valid_from = $4, valid_to = $5
+    SET work_site_id= $1, company_id = $2, day_correction_minutes = $3, valid_from = $4::date, valid_to = $5::date
     WHERE id = $6
     RETURNING id, work_site_id, company_id, day_correction_minutes, valid_from, valid_to
   `,

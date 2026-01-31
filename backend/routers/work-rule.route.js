@@ -45,7 +45,7 @@ router.use(authController.protect);
 
 router
   .route('/resolve')
-  .get(filterQuery, filterWorkRuleQuery, workRuleController.resolveGetWorkRule)
+  .get(filterQuery, filterWorkRuleQuery, workRuleController.resolveGetWorkRules)
   .post(
     filterWorkRuleQuery,
     checkRecordFields(recordFields, { exclude: ['workSiteId', 'companyId'] }),

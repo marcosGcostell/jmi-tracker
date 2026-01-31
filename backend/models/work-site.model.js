@@ -127,7 +127,7 @@ export const createWorkSite = async (data, userIds, client = getPool()) => {
   const { rows } = await client.query(
     `
     INSERT INTO work_sites (name, code, start_date)
-    VALUES ($1, $2, $3)
+    VALUES ($1, $2, $3::date)
     RETURNING id, name, code, is_open, start_date, end_date
   `,
     [name, code, startDate],
@@ -145,7 +145,7 @@ export const updateWorkSite = async (id, data, userIds, client = getPool()) => {
   const { rows } = await client.query(
     `
     UPDATE work_sites
-    SET name = $1, code = $2, start_date = $3, end_date = $4
+    SET name = $1, code = $2, start_date = $3::date, end_date = $4::date
     WHERE id = $5
     RETURNING id, name, code, is_open, start_date, end_date
   `,

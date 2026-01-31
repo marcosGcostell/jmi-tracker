@@ -129,11 +129,11 @@ export const getResourcesWithCategory = async (
 ) => {
   const { rows } = await client.query(
     `
-    SELECT id
-    FROM resources
+    SELECT r.id
+    FROM resources r
     INNER JOIN companies c ON r.company_id = c.id
     LEFT JOIN categories g ON r.category_id = g.id
-    WHERE category_id = $1
+    WHERE r.category_id = $1
     `,
     [categoryId],
   );

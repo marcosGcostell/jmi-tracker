@@ -19,9 +19,9 @@ export const resolveGetWorkRules = async (workSiteId, companyId, period) => {
   try {
     await client.query('BEGIN');
     if (workSiteId) await workSiteExists(workSiteId, client);
-    if (companyId) await companyExists(companyId, false, client);
+    if (companyId) await companyExists(companyId, 'regular', client);
 
-    const workRule = await WorkRule.getConditionedWorkRules(
+    const workRules = await WorkRule.getConditionedWorkRules(
       workSiteId,
       companyId,
       period,
@@ -29,7 +29,7 @@ export const resolveGetWorkRules = async (workSiteId, companyId, period) => {
     );
 
     await client.query('COMMIT');
-    return workRule;
+    return workRules;
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
@@ -38,7 +38,7 @@ export const resolveGetWorkRules = async (workSiteId, companyId, period) => {
   }
 };
 
-export const resolvePostWorkRules = async (workSiteId, companyId, data) => {
+export const resolvePostWorkRule = async (workSiteId, companyId, data) => {
   if (!workSiteId || !companyId) {
     throw new AppError(
       400,
@@ -54,19 +54,20 @@ export const resolvePostWorkRules = async (workSiteId, companyId, data) => {
 
 export const createWorkRule = async data => {
   const client = await getPool().connect();
-  const { workSiteId, companyId, dayCorrection, validFrom, validTo } = data;
 
   try {
     await client.query('BEGIN');
+    const { workSiteId, companyId, dayCorrection, validFrom, validTo } = data;
+
     await workSiteExists(workSiteId, client);
-    await companyExists(companyId, false, client);
+    await companyExists(companyId, 'regular', client);
 
     const newData = {
       workSiteId,
       companyId,
       dayCorrection,
-      validFrom: new Date(validFrom),
-      validTo: validTo ? new Date(validTo) : null,
+      validFrom,
+      validTo: validTo ?? null,
     };
 
     const workRule = await WorkRule.createWorkRule(newData, client);
@@ -74,14 +75,15 @@ export const createWorkRule = async data => {
     await client.query('COMMIT');
     return workRule;
   } catch (err) {
+    console.log(err);
     await client.query('ROLLBACK');
-    if (err.error.code === '23P01') {
+    if (err?.code === '23P01') {
       throw new AppError(
         400,
         'La empresa ya tiene una regla de configuración en ese periodo y esta obra',
       );
     }
-    if (err.error.code === '23514') {
+    if (err?.code === '23514') {
       throw new AppError(
         400,
         'La fecha de finalización debe ser posterior a la de comienzo.',
@@ -101,9 +103,7 @@ export const updateWorkRule = async (id, data) => {
 
     // Nobody can change the work-site or the company in a work rule
     // Probably it will break the results for existing data
-    const { dayCorrection } = data;
-    const validFrom = data.validFrom ? new Date(data.validFrom) : null;
-    const validTo = data.validTo ? new Date(data.validTo) : null;
+    const { dayCorrection, validFrom, validTo } = data;
 
     const newData = {
       workSiteId: workRule.work_site.id,
@@ -113,13 +113,16 @@ export const updateWorkRule = async (id, data) => {
       validTo: validTo || workRule.valid_to,
     };
 
+    // Allows you to change validTo to null
+    if (validTo === null) newData.validTo = null;
+
     const result = await WorkRule.updateWorkRule(id, newData, client);
 
     await client.query('COMMIT');
     return result;
   } catch (err) {
     await client.query('ROLLBACK');
-    if (err.error.code === '23P01') {
+    if (err?.code === '23P01') {
       throw new AppError(
         400,
         'La empresa ya tiene una regla de configuración en ese periodo y esta obra.',

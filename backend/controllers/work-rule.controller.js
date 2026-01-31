@@ -32,7 +32,7 @@ export const getWorkRule = catchAsync(async (req, res, next) => {
   });
 });
 
-export const resolveGetWorkRule = catchAsync(async (req, res, next) => {
+export const resolveGetWorkRules = catchAsync(async (req, res, next) => {
   // Execute the query
   const workRules = await WorkRuleService.resolveGetWorkRules(
     req.workSiteId,
@@ -43,7 +43,7 @@ export const resolveGetWorkRule = catchAsync(async (req, res, next) => {
   // Send response
   res.status(200).json({
     status: 'success',
-    results: workRule.length,
+    results: workRules.length,
     data: {
       workRules,
     },
@@ -52,7 +52,7 @@ export const resolveGetWorkRule = catchAsync(async (req, res, next) => {
 
 export const resolvePostWorkRule = catchAsync(async (req, res, next) => {
   // Execute the query
-  const workRules = await WorkRuleService.resolvePostWorkRule(
+  const workRule = await WorkRuleService.resolvePostWorkRule(
     req.workSiteId,
     req.companyId,
     req.body,
@@ -63,18 +63,14 @@ export const resolvePostWorkRule = catchAsync(async (req, res, next) => {
     status: 'success',
     results: workRule.length,
     data: {
-      workRules,
+      workRule,
     },
   });
 });
 
 export const createWorkRule = catchAsync(async (req, res, next) => {
   // Execute the query
-  const workRule = await WorkRuleService.createWorkRule(
-    req.body,
-    req.workSiteId,
-    req.companyId,
-  );
+  const workRule = await WorkRuleService.createWorkRule(req.body);
 
   // Send response
   res.status(200).json({

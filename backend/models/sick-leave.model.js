@@ -6,7 +6,7 @@ export const getAllSickLeaves = async (
   client = getPool(),
 ) => {
   const periodCondition = period
-    ? ` AND s.start_date <= $2 AND (s.end_date IS NULL OR s.end_date >= $3)`
+    ? ` AND s.start_date <= $2::date AND (s.end_date IS NULL OR s.end_date >= $3::date)`
     : '';
   const values = [onlyActive];
   if (period) values.push(period.to, period.from);
@@ -19,13 +19,13 @@ export const getAllSickLeaves = async (
     ORDER BY s.start_date DESC
     `;
 
-  const { rows } = await pool().query(sql, values);
+  const { rows } = await client.query(sql, values);
 
   return rows;
 };
 
 export const getSickLeave = async (id, client = getPool()) => {
-  const { rows } = await pool().query(
+  const { rows } = await client.query(
     `
     SELECT s.id, s.resource_id, r.name AS name, s.start_date, s.end_date
     FROM sick_leaves s
@@ -44,7 +44,7 @@ export const getWorkerSickLeaves = async (
   client = getPool(),
 ) => {
   const periodCondition = period
-    ? ` AND s.start_date <= $2 AND (s.end_date IS NULL OR s.end_date >= $3)`
+    ? ` AND s.start_date <= $2::date AND (s.end_date IS NULL OR s.end_date >= $3::date)`
     : '';
   const values = [resourceId];
   if (period) values.push(period.to, period.from);
@@ -56,7 +56,7 @@ export const getWorkerSickLeaves = async (
     WHERE s.resource_id = $1${periodCondition}
     `;
 
-  const { rows } = await pool().query(sql, values);
+  const { rows } = await client.query(sql, values);
 
   return rows;
 };
@@ -65,10 +65,10 @@ export const createSickLeave = async (data, client = getPool()) => {
   try {
     const { resourceId, startDate, endDate } = data;
 
-    const { rows } = await pool().query(
+    const { rows } = await client.query(
       `
     INSERT INTO sick_leaves (resource_id, start_date, end_date)
-    VALUES ($1, $2, $3)
+    VALUES ($1, $2::date, $3::date)
     RETURNING id, resource_id, start_date, end_date
   `,
       [resourceId, startDate, endDate],
@@ -84,10 +84,10 @@ export const updateSickLeave = async (id, data, client = getPool()) => {
   try {
     const { resourceId, startDate, endDate } = data;
 
-    const { rows } = await pool().query(
+    const { rows } = await client.query(
       `
     UPDATE sick_leaves
-    SET resource_id = $1, start_date = $2, end_date = $3
+    SET resource_id = $1, start_date = $2::date, end_date = $3::date
     WHERE id = $4
     RETURNING id, resource_id, start_date, end_date
   `,

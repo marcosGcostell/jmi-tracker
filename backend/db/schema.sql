@@ -139,6 +139,22 @@ CREATE TABLE time_entries (
   CHECK (end_time IS NULL OR end_time > start_time)
 );
 
+CREATE TABLE company_attendance (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  work_site_id UUID NOT NULL REFERENCES work_sites(id),
+  company_id   UUID NOT NULL REFERENCES companies(id),
+
+  date DATE NOT NULL,
+  workers_count INTEGER NOT NULL CHECK (workers_count > 0),
+
+  created_by UUID NOT NULL REFERENCES users(id),
+  created_at TIMESTAMPTZ DEFAULT now(),
+
+  CONSTRAINT unique_company_day
+    UNIQUE (work_site_id, company_id, date)
+);
+
 CREATE TABLE vacations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 

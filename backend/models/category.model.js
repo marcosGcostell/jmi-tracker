@@ -18,7 +18,7 @@ export const getCompanyCategories = async (
   plusGlobal,
   client = getPool(),
 ) => {
-  const globalCondition = plusGlobal ? 'OR g.company_id = null' : '';
+  const globalCondition = plusGlobal ? 'OR g.company_id IS null' : '';
 
   const { rows } = await client.query(
     `
@@ -26,7 +26,7 @@ export const getCompanyCategories = async (
     FROM categories g
     LEFT JOIN companies c ON g.company_id = c.id
     WHERE g.company_id = $1 ${globalCondition}
-    ORDER BY g.name ASC
+    ORDER BY c.name ASC NULLS FIRST, g.name ASC
     `,
     [companyId],
   );
@@ -39,7 +39,7 @@ export const getCategory = async (id, client = getPool()) => {
     `
     SELECT g.id, g.name, g.company_id, c.name AS company_name
     FROM categories g
-    INNER JOIN companies c ON g.company_id = c.id
+    LEFT JOIN companies c ON g.company_id = c.id
     WHERE g.id = $1
     `,
     [id],
@@ -53,7 +53,7 @@ export const findCategory = async (companyId, name, client = getPool()) => {
     `
     SELECT g.id, g.name, g.company_id, c.name AS company_name
     FROM categories g
-    INNER JOIN companies c ON g.company_id = c.id
+    LEFT JOIN companies c ON g.company_id = c.id
     WHERE g.company_id = $1 AND g.name = $2
     `,
     [companyId, name],
@@ -70,7 +70,7 @@ export const createCategory = async (data, client = getPool()) => {
       `
     INSERT INTO categories (name, company_id)
     VALUES ($1, $2)
-    RETURNING id, name
+    RETURNING id, name, company_id
   `,
       [name, companyId],
     );
@@ -88,7 +88,7 @@ export const updateCategory = async (id, name, client = getPool()) => {
     UPDATE categories
     SET name = $1
     WHERE id = $2
-    RETURNING id, name
+    RETURNING id, name, company_id
   `,
       [name, id],
     );

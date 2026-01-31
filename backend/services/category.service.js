@@ -29,11 +29,13 @@ export const createCategory = async data => {
         'Ya existe una categoría con este nombre en esta empresa.',
       );
 
-    const category = await Category.createCategory({
-      companyId,
-      name: name.trim(),
+    const category = await Category.createCategory(
+      {
+        companyId,
+        name: name.trim(),
+      },
       client,
-    });
+    );
 
     await client.query('COMMIT');
     return category;
@@ -72,7 +74,7 @@ export const deleteCategory = async id => {
     const category = await categoryExists(id, client);
 
     const usedInResources = await Resource.getResourcesWithCategory(id, client);
-    if (!usedInResources.length)
+    if (usedInResources.length)
       throw new AppError(
         400,
         'La categoría no se puede borrar porque está siendo usada por algún recurso.',
